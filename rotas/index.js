@@ -11,6 +11,7 @@ const cobrancas = require('./cobrancas');
 const clientes = require('./clientes');
 const produtos = require('./produtos');
 const admin = require('./admin');
+const financeiro = require('./financeiro');
 
 const router = express.Router();
 
@@ -26,6 +27,7 @@ api.use('/reembolsos', reembolsos);
 api.use('/cobrancas', cobrancas);
 api.use('/clientes', clientes);
 api.use('/produtos', produtos);
+api.use('/financeiro', financeiro);
 api.use(admin);
 
 router.use('/api', api);
