@@ -1,0 +1,24 @@
+{
+  "name": "atlas-portal-interno",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Portal interno Atlas GR (Chamados, Reembolso, Cobranças) integrado ao Bitrix24 via serviço de integração existente.",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^13.0.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^8.6.1",
+    "express-session": "^1.18.0",
+    "helmet": "^8.3.0",
+    "multer": "^2.2.0",
+    "zod": "^4.4.3"
+  }
+}
