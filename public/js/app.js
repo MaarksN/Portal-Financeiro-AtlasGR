@@ -9,7 +9,9 @@ import * as cobrancas from './telas/cobrancas.js';
 import * as fontes from './telas/fontes.js';
 import * as empresas from './telas/empresas.js';
 import * as cadastros from './telas/cadastros.js';
-
+import * as clientes from './telas/clientes.js';
+import * as produtos from './telas/produtos.js';
+import * as financeiro from './telas/financeiro.js';
 
 // ------------------------------------------------------------------
 // Casca da central: navegação lateral montada a partir das permissões
@@ -37,10 +39,22 @@ const TELAS = {
     modulo: cadastros, rotulo: 'Cadastros', icone: 'fonte', grupo: 'Gestão',
     quando: (p) => p.admin || p.financeiro
   },
+  financeiro: {
+    modulo: financeiro, rotulo: 'Financeiro', icone: 'cobranca', grupo: 'Gestão',
+    quando: (p) => p.financeiro || p.admin,
+  },
   fontes: {
     modulo: fontes, rotulo: 'Fontes e integrações', icone: 'fonte', grupo: 'Gestão',
     quando: (p) => p.financeiro || p.ti || p.admin,
   },
+  clientes: {
+    modulo: clientes, rotulo: 'Clientes', icone: 'cobranca', grupo: 'Vendas',
+    quando: (p) => p.vendedor || p.gestor_comercial || p.admin,
+  },
+  produtos: {
+    modulo: produtos, rotulo: 'Produtos', icone: 'cobranca', grupo: 'Vendas',
+    quando: (p) => p.vendedor || p.gestor_comercial || p.admin,
+  }
 };
 
 const raizPagina = document.getElementById('pagina');

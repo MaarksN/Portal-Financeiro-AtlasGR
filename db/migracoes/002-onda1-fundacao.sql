@@ -1,6 +1,6 @@
 -- ============================== Onda 1 - Fundação ==============================
 
-CREATE TABLE empresas (
+CREATE TABLE IF NOT EXISTS empresas (
   id             INTEGER PRIMARY KEY,
   cnpj           TEXT    NOT NULL UNIQUE,
   razao_social   TEXT    NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE empresas (
   atualizado_em  TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE filiais (
+CREATE TABLE IF NOT EXISTS filiais (
   id             INTEGER PRIMARY KEY,
   empresa_id     INTEGER NOT NULL REFERENCES empresas (id) ON DELETE CASCADE,
   cnpj           TEXT    NOT NULL UNIQUE,
@@ -19,15 +19,15 @@ CREATE TABLE filiais (
   criado_em      TEXT    NOT NULL DEFAULT (datetime('now')),
   atualizado_em  TEXT    NOT NULL DEFAULT (datetime('now'))
 );
-CREATE INDEX ix_filiais_empresa ON filiais (empresa_id);
+CREATE INDEX IF NOT EXISTS ix_filiais_empresa ON filiais (empresa_id);
 
-CREATE TABLE usuarios_empresas (
+CREATE TABLE IF NOT EXISTS usuarios_empresas (
   usuario_id     INTEGER NOT NULL REFERENCES usuarios (id) ON DELETE CASCADE,
   empresa_id     INTEGER NOT NULL REFERENCES empresas (id) ON DELETE CASCADE,
   PRIMARY KEY (usuario_id, empresa_id)
 );
 
-CREATE TABLE clientes (
+CREATE TABLE IF NOT EXISTS clientes (
   id             INTEGER PRIMARY KEY,
   documento      TEXT    NOT NULL UNIQUE,
   nome           TEXT    NOT NULL,
@@ -37,7 +37,7 @@ CREATE TABLE clientes (
   atualizado_em  TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE fornecedores (
+CREATE TABLE IF NOT EXISTS fornecedores (
   id             INTEGER PRIMARY KEY,
   documento      TEXT    NOT NULL UNIQUE,
   nome           TEXT    NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE fornecedores (
   atualizado_em  TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE produtos (
+CREATE TABLE IF NOT EXISTS produtos (
   id             INTEGER PRIMARY KEY,
   codigo         TEXT    UNIQUE,
   nome           TEXT    NOT NULL,
@@ -58,7 +58,7 @@ CREATE TABLE produtos (
   atualizado_em  TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE servicos (
+CREATE TABLE IF NOT EXISTS servicos (
   id             INTEGER PRIMARY KEY,
   codigo         TEXT    UNIQUE,
   nome           TEXT    NOT NULL,
