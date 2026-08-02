@@ -7,6 +7,7 @@ import * as reembolsos from './telas/reembolsos.js';
 import * as aprovacoes from './telas/aprovacoes.js';
 import * as cobrancas from './telas/cobrancas.js';
 import * as fontes from './telas/fontes.js';
+import * as financeiro from './telas/financeiro.js';
 
 // ------------------------------------------------------------------
 // Casca da central: navegação lateral montada a partir das permissões
@@ -25,6 +26,10 @@ const TELAS = {
   cobrancas: {
     modulo: cobrancas, rotulo: 'Cobranças', icone: 'cobranca', grupo: 'Gestão',
     quando: (p) => p.financeiro,
+  },
+  financeiro: {
+    modulo: financeiro, rotulo: 'Financeiro', icone: 'cobranca', grupo: 'Gestão',
+    quando: (p) => p.financeiro || p.admin,
   },
   fontes: {
     modulo: fontes, rotulo: 'Fontes e integrações', icone: 'fonte', grupo: 'Gestão',
