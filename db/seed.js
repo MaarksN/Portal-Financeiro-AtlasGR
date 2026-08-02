@@ -81,6 +81,14 @@ const USUARIOS = [
   },
 ];
 
+
+function semearEmpresas() {
+  if (vazia('empresas')) {
+    executar(`INSERT INTO empresas (id, cnpj, razao_social, ativo) VALUES (1, '12345678000199', 'Atlas GR', 1)`);
+    executar(`INSERT INTO filiais (id, empresa_id, cnpj, nome, ativo) VALUES (1, 1, '12345678000200', 'Filial SP', 1)`);
+  }
+}
+
 function semearUsuarios() {
   if (!vazia('usuarios')) return;
   // Senha única de primeiro acesso. Está documentada no README e
@@ -91,7 +99,11 @@ function semearUsuarios() {
     VALUES (?, ?, ?, ?, ?, ?)
   `);
   for (const u of USUARIOS) {
-    inserir(u.email, u.nome, hash, JSON.stringify(u.papeis), u.centroCusto, u.gestor);
+
+    const res = inserir(u.email, u.nome, hash, JSON.stringify(u.papeis), u.centroCusto, u.gestor);
+    executar('INSERT INTO usuarios_empresas (usuario_id, empresa_id) VALUES (?, 1)', res.lastInsertRowid);
+    executar('UPDATE usuarios SET empresa_id = 1 WHERE id = ?', res.lastInsertRowid);
+
   }
   log.info('Usuários iniciais criados', { total: USUARIOS.length });
 }
@@ -420,7 +432,10 @@ function semearRelatorios() {
 
 function semear() {
   emTransacao(() => {
+
+    semearEmpresas();
     semearUsuarios();
+
     semearPolitica();
     if (config.demo) {
       semearCobrancas();
