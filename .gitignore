@@ -1,0 +1,5 @@
+dados/*.db*
+cookies.txt
+sessao.json
+headers.txt
+npm_output.log

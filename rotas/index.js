@@ -22,7 +22,9 @@ api.use(limiteApi, exigirSessao);
 api.use('/chamados', chamados);
 api.use('/reembolsos', reembolsos);
 api.use('/cobrancas', cobrancas);
-api.use(admin);
+api.use('/admin', admin);
+api.use('/compras', require('./compras'));
+api.use('/estoque', require('./estoque'));
 
 router.use('/api', api);
 

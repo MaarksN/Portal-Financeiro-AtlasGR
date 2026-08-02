@@ -426,8 +426,40 @@ function semear() {
       semearCobrancas();
       semearChamados();
       semearRelatorios();
+      semearComprasEstoque();
     }
   })();
 }
 
 module.exports = { semear };
+
+function semearComprasEstoque() {
+  if (!vazia("fornecedores")) return;
+
+  executar(`
+    INSERT INTO fornecedores (id, documento, razao_social, nome_fantasia, email) VALUES
+    (1, '00000000000100', 'Fornecedor A Ltda', 'Fantasia A', 'contato@fornecedora.com'),
+    (2, '00000000000200', 'Distribuidora B S.A.', 'DistriB', 'vendas@distribuidora.com')
+  `);
+  log.info("Semente: Fornecedores de teste inseridos.");
+
+  executar(`
+    INSERT INTO produtos (id, codigo, nome, descricao, unidade_medida, categoria) VALUES
+    (1, 'PROD001', 'Monitor Dell 24"', 'Monitor LED 1080p', 'UN', 'Eletrônicos'),
+    (2, 'PROD002', 'Teclado Mecânico', 'Teclado USB PT-BR', 'UN', 'Eletrônicos'),
+    (3, 'PROD003', 'Papel A4', 'Caixa de Papel A4 500 folhas', 'CX', 'Escritório')
+  `);
+  log.info("Semente: Produtos de teste inseridos.");
+
+  executar(`
+    INSERT INTO estoque_locais (id, nome, descricao) VALUES
+    (1, 'Almoxarifado TI', 'Materiais de Informática'),
+    (2, 'Almoxarifado Geral', 'Materiais de Escritório')
+  `);
+  log.info("Semente: Locais de estoque inseridos.");
+
+  executar("INSERT INTO estoques (produto_id, local_id, quantidade) VALUES (1, 1, 10)");
+  executar("INSERT INTO estoques (produto_id, local_id, quantidade) VALUES (2, 1, 15)");
+  executar("INSERT INTO estoques (produto_id, local_id, quantidade) VALUES (3, 2, 50)");
+  log.info("Semente: Saldos de estoque inseridos.");
+}
