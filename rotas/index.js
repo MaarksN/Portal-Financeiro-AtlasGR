@@ -8,6 +8,8 @@ const auth = require('./auth');
 const chamados = require('./chamados');
 const reembolsos = require('./reembolsos');
 const cobrancas = require('./cobrancas');
+const clientes = require('./clientes');
+const produtos = require('./produtos');
 const admin = require('./admin');
 
 const router = express.Router();
@@ -22,6 +24,8 @@ api.use(limiteApi, exigirSessao);
 api.use('/chamados', chamados);
 api.use('/reembolsos', reembolsos);
 api.use('/cobrancas', cobrancas);
+api.use('/clientes', clientes);
+api.use('/produtos', produtos);
 api.use(admin);
 
 router.use('/api', api);
