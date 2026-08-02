@@ -7,6 +7,8 @@ import * as reembolsos from './telas/reembolsos.js';
 import * as aprovacoes from './telas/aprovacoes.js';
 import * as cobrancas from './telas/cobrancas.js';
 import * as fontes from './telas/fontes.js';
+import * as empresas from './telas/empresas.js';
+import * as cadastros from './telas/cadastros.js';
 import * as clientes from './telas/clientes.js';
 import * as produtos from './telas/produtos.js';
 import * as financeiro from './telas/financeiro.js';
@@ -28,6 +30,14 @@ const TELAS = {
   cobrancas: {
     modulo: cobrancas, rotulo: 'Cobranças', icone: 'cobranca', grupo: 'Gestão',
     quando: (p) => p.financeiro,
+  },
+  empresas: {
+    modulo: empresas, rotulo: 'Empresas e Filiais', icone: 'fonte', grupo: 'Gestão',
+    quando: (p) => p.admin
+  },
+  cadastros: {
+    modulo: cadastros, rotulo: 'Cadastros', icone: 'fonte', grupo: 'Gestão',
+    quando: (p) => p.admin || p.financeiro
   },
   financeiro: {
     modulo: financeiro, rotulo: 'Financeiro', icone: 'cobranca', grupo: 'Gestão',

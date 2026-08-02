@@ -1,6 +1,6 @@
 -- ============================== Onda 3: Vendas ==============================
 
-CREATE TABLE clientes (
+CREATE TABLE IF NOT EXISTS clientes (
   id                INTEGER PRIMARY KEY,
   tipo              TEXT    NOT NULL, -- PF ou PJ
   nome              TEXT    NOT NULL,
@@ -13,9 +13,13 @@ CREATE TABLE clientes (
   criado_em         TEXT    NOT NULL DEFAULT (datetime('now')),
   atualizado_em     TEXT    NOT NULL DEFAULT (datetime('now'))
 );
-CREATE INDEX ix_clientes_documento ON clientes (documento);
+CREATE INDEX IF NOT EXISTS ix_clientes_documento ON clientes (documento);
+ALTER TABLE clientes ADD COLUMN tipo TEXT NOT NULL DEFAULT 'PJ';
+ALTER TABLE clientes ADD COLUMN endereco TEXT;
+ALTER TABLE clientes ADD COLUMN limite_credito INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE clientes ADD COLUMN vendedor_email TEXT;
 
-CREATE TABLE produtos (
+CREATE TABLE IF NOT EXISTS produtos (
   id                INTEGER PRIMARY KEY,
   nome              TEXT    NOT NULL,
   sku               TEXT    UNIQUE,
@@ -28,9 +32,14 @@ CREATE TABLE produtos (
   criado_em         TEXT    NOT NULL DEFAULT (datetime('now')),
   atualizado_em     TEXT    NOT NULL DEFAULT (datetime('now'))
 );
-CREATE INDEX ix_produtos_sku ON produtos (sku);
+ALTER TABLE produtos ADD COLUMN sku TEXT;
+CREATE INDEX IF NOT EXISTS ix_produtos_sku ON produtos (sku);
+ALTER TABLE produtos ADD COLUMN categoria TEXT;
+ALTER TABLE produtos ADD COLUMN marca TEXT;
+ALTER TABLE produtos ADD COLUMN unidade TEXT;
+ALTER TABLE produtos ADD COLUMN custo_centavos INTEGER NOT NULL DEFAULT 0;
 
-CREATE TABLE servicos (
+CREATE TABLE IF NOT EXISTS servicos (
   id                INTEGER PRIMARY KEY,
   nome              TEXT    NOT NULL,
   codigo            TEXT    UNIQUE,
@@ -40,6 +49,7 @@ CREATE TABLE servicos (
   criado_em         TEXT    NOT NULL DEFAULT (datetime('now')),
   atualizado_em     TEXT    NOT NULL DEFAULT (datetime('now'))
 );
+ALTER TABLE servicos ADD COLUMN categoria TEXT;
 
 CREATE TABLE orcamentos (
   id                INTEGER PRIMARY KEY,
