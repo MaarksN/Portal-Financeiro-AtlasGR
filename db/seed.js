@@ -9,8 +9,8 @@ const { consultarUm, executar, emTransacao } = require('./index');
 // ------------------------------------------------------------------
 // Semeadura idempotente: cada bloco só roda se a tabela estiver
 // vazia. Os usuários e a política entram sempre (o portal precisa
-// deles para funcionar); a carteira de cobranças, os chamados e os
-// relatórios de reembolso só entram em modo demonstração.
+// deles para funcionar); a carteira de cobranças e os relatórios de
+// reembolso só entram em modo demonstração.
 // ------------------------------------------------------------------
 
 const vazia = (tabela) => consultarUm(`SELECT count(*) AS n FROM ${tabela}`).n === 0;
@@ -26,7 +26,7 @@ const USUARIOS = [
   {
     email: 'comercial@atlasgr.com.br',
     nome: 'Comercial',
-    papeis: ['solicitante'],
+    papeis: ['solicitante', 'comercial'],
     centroCusto: 'Comercial',
     gestor: 'gerencia@atlasgr.com.br',
   },
@@ -250,52 +250,6 @@ function semearCobrancas() {
   log.info('Carteira de cobranças semeada', { faturas: FATURAS.length, clientes: CLIENTES.length });
 }
 
-// ---------------------------- Chamados demo ----------------------------
-const CHAMADOS = [
-  ['Acesso / login', 'Alta',    'Não consigo entrar no Connect Plus',              'andamento', 'Em atendimento', 'ti@atlasgr.com.br',   -2],
-  ['Sistema fora do ar', 'Crítica', 'Perfil Securitário não carrega os relatórios', 'andamento', 'Em atendimento', 'ti@atlasgr.com.br',   -1],
-  ['Dúvida sobre processo', 'Normal', 'Como lanço reembolso de pedágio da rota BR-116?', 'todo', 'Aberto',      null,                    -4],
-  ['Equipamento', 'Normal',   'Solicitação de segundo monitor para a torre de controle', 'todo', 'Aberto',   null,                    -6],
-  ['Acesso / login', 'Baixa',  'Incluir novo operador no monitoramento',           'concluido', 'Concluído',   'ti@atlasgr.com.br',  -12],
-];
-
-function semearChamados() {
-  if (!vazia('chamados')) return;
-
-  CHAMADOS.forEach((linha, indice) => {
-    const [categoria, prioridade, resumo, categoriaStatus, status, responsavel, offset] = linha;
-    const prazoHoras = { 'Crítica': 4, Alta: 8, Normal: 24, Baixa: 72 }[prioridade] || 24;
-    const abertura = new Date();
-    abertura.setUTCDate(abertura.getUTCDate() + offset);
-    const slaVence = new Date(abertura.getTime() + prazoHoras * 3600000);
-
-    executar(
-      `INSERT INTO chamados (
-         protocolo, chave_jira, url_jira, solicitante_email, categoria, prioridade,
-         resumo, descricao, status, status_categoria, responsavel,
-         sla_vence_em, sla_violado, sincronizado_em, criado_em, atualizado_em
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?)`,
-      `CH-${new Date().getUTCFullYear()}-${String(indice + 1).padStart(4, '0')}`,
-      `ATL-${1200 + indice}`,
-      null,
-      indice % 2 === 0 ? 'comercial@atlasgr.com.br' : 'financeiro@atlasgr.com.br',
-      categoria,
-      prioridade,
-      resumo,
-      'Chamado de demonstração — semeado para o portal ter conteúdo sem o Jira conectado.',
-      status,
-      categoriaStatus,
-      responsavel,
-      slaVence.toISOString(),
-      categoriaStatus !== 'concluido' && slaVence < new Date() ? 1 : 0,
-      abertura.toISOString(),
-      abertura.toISOString(),
-    );
-  });
-
-  log.info('Chamados de demonstração semeados', { total: CHAMADOS.length });
-}
-
 // --------------------------- Reembolsos demo ---------------------------
 const RELATORIOS = [
   {
@@ -424,7 +378,6 @@ function semear() {
     semearPolitica();
     if (config.demo) {
       semearCobrancas();
-      semearChamados();
       semearRelatorios();
     }
   })();

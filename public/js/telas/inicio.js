@@ -1,12 +1,12 @@
 import { api, sessao } from '../nucleo/api.js';
 import {
-  h, limpar, icone, moeda, moedaCurta, data, desdeQuando, hoje,
+  h, limpar, icone, moeda, moedaCurta,
   carregando, etiqueta, indicador,
 } from '../nucleo/ui.js';
 
 // A central propriamente dita: uma tela que responde "o que precisa de
-// mim agora?" juntando chamados, reembolso, aprovações e — para quem é
-// do financeiro — a carteira de cobranças.
+// mim agora?" juntando reembolso, aprovações e — para quem é do
+// financeiro — a carteira de cobranças.
 
 function bomDia() {
   const hora = new Date().getHours();
@@ -39,16 +39,13 @@ export async function montar(ctx) {
   // a tela inteira.
   const seguro = (promessa, padrao) => promessa.catch(() => padrao);
 
-  const [resumoChamados, chamados, resumoReembolso, relatorios, fila, painel] = await Promise.all([
-    seguro(api.get('/api/chamados/resumo'), { abertos: 0, naFila: 0, emAndamento: 0, concluidos: 0, slaViolado: 0 }),
-    seguro(api.get('/api/chamados?status=andamento'), []),
+  const [resumoReembolso, relatorios, fila, painel] = await Promise.all([
     seguro(api.get('/api/reembolsos/resumo'), { rascunhos: 0, emAprovacao: 0, aprovados: 0, pagos: 0, aReceberCentavos: 0, emAprovacaoCentavos: 0 }),
     seguro(api.get('/api/reembolsos'), []),
     permissoes.aprovaReembolso ? seguro(api.get('/api/reembolsos/fila'), []) : Promise.resolve(null),
     permissoes.financeiro ? seguro(api.get('/api/cobrancas/painel'), null) : Promise.resolve(null),
   ]);
 
-  ctx.definirDistintivo('chamados', resumoChamados.abertos, resumoChamados.slaViolado > 0);
   ctx.definirDistintivo('reembolsos', resumoReembolso.rascunhos + resumoReembolso.emAprovacao);
   if (fila) ctx.definirDistintivo('aprovacoes', fila.length, fila.length > 0);
   if (painel) {
@@ -70,9 +67,6 @@ export async function montar(ctx) {
       tom: 'alerta',
       ir: 'aprovacoes',
     });
-  }
-  if (resumoChamados.slaViolado) {
-    pendencias.push({ texto: `${resumoChamados.slaViolado} chamado(s) com SLA estourado`, tom: 'critico', ir: 'chamados' });
   }
   if (resumoReembolso.rascunhos) {
     pendencias.push({ texto: `${resumoReembolso.rascunhos} relatório(s) em rascunho, ainda não enviados`, tom: 'neutro', ir: 'reembolsos' });
@@ -110,11 +104,6 @@ export async function montar(ctx) {
   // -------------------------- indicadores do topo --------------------------
   const topo = h('div', { class: 'indicadores' },
     indicador({
-      rotulo: 'Chamados em aberto', valor: resumoChamados.abertos,
-      tom: resumoChamados.slaViolado ? 'critico' : '',
-      nota: resumoChamados.slaViolado ? `${resumoChamados.slaViolado} fora do prazo` : 'todos dentro do prazo',
-    }),
-    indicador({
       rotulo: 'Reembolso em aprovação', valor: moeda(resumoReembolso.emAprovacaoCentavos),
       nota: `${resumoReembolso.emAprovacao} relatório(s)`,
     }),
@@ -133,21 +122,6 @@ export async function montar(ctx) {
   );
 
   // -------------------------- blocos por módulo --------------------------
-  const cartaoChamados = bloco({
-    titulo: 'Chamados em andamento',
-    acao: 'Ver todos',
-    aoClicar: () => ctx.irPara('chamados'),
-    conteudo: chamados.length
-      ? h('div', {}, ...chamados.slice(0, 5).map((chamado) => linha(
-        h('div', {},
-          h('div', { style: 'font-size:13px;font-weight:600' }, chamado.resumo),
-          h('div', { class: 'silencioso', style: 'font-size:11px' }, `${chamado.protocolo} · ${chamado.categoria}`)),
-        etiqueta(chamado.prioridade, chamado.slaViolado ? 'critico' : 'neutro'),
-        () => ctx.irPara('chamados'),
-      )))
-      : h('div', { class: 'silencioso', style: 'font-size:12.5px' }, 'Nenhum chamado em andamento.'),
-  });
-
   const meusRelatorios = relatorios.filter((r) => ['rascunho', 'em_aprovacao', 'devolvido'].includes(r.estado));
   const cartaoReembolso = bloco({
     titulo: 'Meus relatórios em curso',
@@ -185,7 +159,6 @@ export async function montar(ctx) {
     topo,
     cartaoPendencias,
     h('div', { class: 'grade duas', style: 'margin-top:16px' },
-      cartaoChamados,
       cartaoReembolso,
       cartaoCobrancas),
   );

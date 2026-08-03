@@ -1,29 +1,11 @@
 # Central Atlas GR
 
-Uma central interna para três processos que hoje vivem espalhados:
-chamados de TI (no Jira), reembolso com alçada de aprovação, e o
-funil de cobrança do financeiro — consolidando a carteira que hoje
-está no Bitrix24, no Connect Plus e no Perfil Securitário.
+Uma central interna para dois processos que hoje vivem espalhados:
+reembolso com alçada de aprovação, e o funil de cobrança do
+financeiro — consolidando a carteira que hoje está no Bitrix24, no
+Connect Plus e no Perfil Securitário.
 
 ## Como cada módulo funciona
-
-### Chamados — o Jira é o dono
-
-O chamado nasce no Jira Cloud (mesmo projeto onde a equipe de TI já
-atende), com prioridade, prazo (SLA) e conversa. O portal:
-
-- Abre a issue via REST v3, com protocolo próprio (`CH-2026-0001`)
-  como referência estável mesmo se o Jira estiver fora do ar no
-  momento da abertura.
-- Lê status, responsável, SLA e comentários direto do Jira.
-- Mantém um **espelho de mão única** no Bitrix (Jira → Bitrix, nunca
-  o contrário) via fila persistida em SQLite: se o serviço de
-  integração cair, o evento espera e é reenviado com backoff. Um job
-  de reconciliação relê o Jira periodicamente e corrige qualquer
-  divergência.
-
-Por quê mão única: dois sistemas escrevendo o mesmo status é a receita
-clássica pra divergência. O Jira manda; o Bitrix reflete.
 
 ### Reembolso — relatório de despesa, não despesa solta
 
@@ -89,8 +71,8 @@ funciona hoje**, sem nenhuma configuração.
 
 Sem nenhuma fonte configurada no `.env`, o portal detecta e sobe
 sozinho com dados semeados: 8 usuários, 34 faturas de exemplo
-espalhadas pelo funil, 5 chamados e 4 relatórios de reembolso. Um
-aviso amarelo aparece no topo da central enquanto isso for verdade.
+espalhadas pelo funil e 4 relatórios de reembolso. Um aviso amarelo
+aparece no topo da central enquanto isso for verdade.
 
 ```
 financeiro@atlasgr.com.br    — cobranças, dá baixa em reembolso
@@ -98,7 +80,7 @@ coordenacao@atlasgr.com.br   — aprova (1º nível de alçada)
 gerencia@atlasgr.com.br      — aprova (2º nível)
 diretoria@atlasgr.com.br     — aprova (3º nível)
 comercial@atlasgr.com.br     — solicitante
-ti@atlasgr.com.br            — chamados
+ti@atlasgr.com.br            — fontes e integrações
 rh@atlasgr.com.br            — solicitante + coordenação
 admin@atlasgr.com.br         — todos os papéis
 ```
@@ -116,9 +98,9 @@ Abre em `http://localhost:3000`. Sem editar o `.env`, já funciona em
 modo demonstração — veja as credenciais acima.
 
 Para usar as integrações reais, preencha no `.env` só o que for usar
-(Jira, Bitrix, Connect Plus, Perfil Securitário são todos
-independentes entre si) — detalhes de cada variável estão comentados
-no próprio `.env.example`.
+(Bitrix, Connect Plus, Perfil Securitário são todos independentes
+entre si) — detalhes de cada variável estão comentados no próprio
+`.env.example`.
 
 ## Segurança
 
@@ -141,8 +123,8 @@ no próprio `.env.example`.
 
 - **Trocar os usuários de demonstração** por SSO da empresa (Google
   Workspace / Microsoft Entra) — só `lib/usuarios.js` muda.
-- **Preencher as credenciais reais** de Jira, Bitrix, Connect Plus e
-  Perfil Securitário no `.env` de produção.
+- **Preencher as credenciais reais** de Bitrix, Connect Plus e Perfil
+  Securitário no `.env` de produção.
 - **Confirmar os nomes dos campos customizados** do Bitrix
   (`BITRIX_CAMPO_*`) e, se necessário, ajustar os candidatos de nome
   em `lib/conectores/rest-generico.js` para Connect Plus/Perfil
@@ -170,10 +152,8 @@ lib/
   usuarios.js, auditoria.js   → contas, papéis, trilha de auditoria
   dinheiro.js                 → conversão reais ↔ centavos
 
-  jira.js                     → cliente Jira Cloud (REST v3, ADF, SLA)
   integracao.js               → contrato HMAC com o serviço de integração existente
-  espelho.js                  → fila Jira → Bitrix, com reconciliação
-  chamados.js                 → domínio de chamados
+  espelho.js                  → fila de espelhamento para o Bitrix
 
   politica.js, anexos.js      → política de despesa, comprovantes
   reembolsos.js                → relatórios, despesas, cadeia de alçada
@@ -191,6 +171,6 @@ public/
   styles.css                  → sistema visual (identidade Atlas + padrão NewConnect)
   js/
     nucleo/api.js, ui.js      → acesso à API, componentes de UI
-    telas/                    → uma tela por módulo (início, chamados, reembolsos,
+    telas/                    → uma tela por módulo (início, reembolsos,
                                  aprovações, cobranças, fontes)
 ```

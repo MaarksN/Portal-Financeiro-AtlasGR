@@ -25,7 +25,7 @@ function mostrarDicaDemo() {
     ['comercial@atlasgr.com.br', 'solicitante'],
     ['financeiro@atlasgr.com.br', 'cobranças e baixa de pagamento'],
     ['coordenacao@atlasgr.com.br', 'aprova reembolso'],
-    ['ti@atlasgr.com.br', 'chamados'],
+    ['ti@atlasgr.com.br', 'fontes e integrações'],
   ];
   dicaDemo.replaceChildren();
   dicaDemo.append(document.createTextNode('Modo demonstração · senha '));

@@ -72,26 +72,9 @@ function resolverSegredoSessao() {
   return gerado;
 }
 
-// ---------------------------- Jira Cloud ----------------------------
-const jira = {
-  base: texto('JIRA_BASE').replace(/\/+$/, ''),
-  email: texto('JIRA_EMAIL'),
-  token: texto('JIRA_API_TOKEN'),
-  projeto: texto('JIRA_PROJETO', 'ATL'),
-  tipoIssue: texto('JIRA_TIPO_ISSUE', 'Task'),
-  // Campo customizado que guarda o e-mail do solicitante do portal.
-  // Sem ele, caímos em busca por `reporter` — ver lib/jira.js.
-  campoSolicitante: texto('JIRA_CAMPO_SOLICITANTE'),
-  campoProtocolo: texto('JIRA_CAMPO_PROTOCOLO'),
-  // Jira Service Management: só existe se o projeto for do tipo service desk.
-  usarJsm: booleano('JIRA_USAR_JSM', false),
-};
-jira.configurado = Boolean(jira.base && jira.email && jira.token);
-
 // ------------------------------ Bitrix ------------------------------
 const bitrix = {
   webhook: texto('BITRIX_WEBHOOK').replace(/\/+$/, ''),
-  entidadeChamado: numero('ENTITY_TYPE_ID_CHAMADO', 0),
   entidadeReembolso: numero('ENTITY_TYPE_ID_REEMBOLSO', 0),
   entidadeCobranca: numero('ENTITY_TYPE_ID_COBRANCA', 0),
   // Nomes dos campos customizados da SPA de cobrança. Os padrões são
@@ -172,7 +155,7 @@ const politica = {
 // Demonstração é ligado explicitamente, ou automaticamente quando não
 // há nenhuma fonte real configurada — assim o portal roda inteiro na
 // primeira execução, sem .env, com dados semeados.
-const algumaFonteReal = jira.configurado || bitrix.configurado || connect.configurado || perfil.configurado;
+const algumaFonteReal = bitrix.configurado || connect.configurado || perfil.configurado;
 const demo = booleano('ATLAS_DEMO', !algumaFonteReal);
 
 module.exports = {
@@ -189,7 +172,6 @@ module.exports = {
     banco: path.join(pastaDados, 'atlas.db'),
     publico: path.join(raiz, 'public'),
   },
-  jira,
   bitrix,
   integracao,
   connect,
@@ -197,8 +179,8 @@ module.exports = {
   anexos,
   politica,
   sincronizacao: {
-    // Intervalo do job que puxa cobranças das fontes e reconcilia o
-    // espelho de chamados. 0 desliga o agendamento automático.
+    // Intervalo do job que puxa cobranças das fontes e drena a fila
+    // do espelho. 0 desliga o agendamento automático.
     intervaloMinutos: numero('SINCRONIZACAO_MINUTOS', demo ? 0 : 15),
   },
 };

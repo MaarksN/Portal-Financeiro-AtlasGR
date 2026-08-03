@@ -66,19 +66,17 @@ app.use((req, res) => res.sendFile(path.join(config.caminhos.publico, 'index.htm
 app.use(tratadorDeErro);
 
 // ------------------------------------------------------------------
-// Job de fundo: puxa as fontes de cobrança, drena a fila do espelho e
-// reconcilia os chamados abertos com o Jira. Roda uma vez no boot
-// (fora do modo demo) e depois no intervalo configurado.
+// Job de fundo: puxa as fontes de cobrança e drena a fila do espelho.
+// Roda uma vez no boot (fora do modo demo) e depois no intervalo
+// configurado.
 // ------------------------------------------------------------------
 async function ciclo() {
   try {
     const cobrancas = await conectores.sincronizarTudo();
     const fila = await espelho.processarFila();
-    const reconciliacao = await espelho.reconciliar();
     log.info('Ciclo de sincronização concluído', {
       fontes: cobrancas.fontes.filter((f) => !f.pulado).length,
       espelhoEnviados: fila.enviados || 0,
-      chamadosMudados: reconciliacao.mudados || 0,
     });
   } catch (erro) {
     log.erro('Ciclo de sincronização falhou', { erro: erro.message });
@@ -101,7 +99,6 @@ const servidor = app.listen(config.porta, () => {
   log.info(`Central Atlas GR no ar em http://localhost:${config.porta}`, {
     ambiente: config.ambiente,
     modoDemo: config.demo,
-    jira: config.jira.configurado,
     bitrix: config.bitrix.configurado,
   });
   if (config.demo) {
