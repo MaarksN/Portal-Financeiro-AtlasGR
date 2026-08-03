@@ -1,6 +1,5 @@
 'use strict';
 
-const path = require('path');
 const express = require('express');
 const session = require('express-session');
 
@@ -46,6 +45,10 @@ app.use(session({
 // sessão para quem nunca fez login.
 app.use(['/login', '/logout', '/api'], csrf);
 
+// Não há landing pública — '/' e qualquer rota desconhecida caem
+// direto no login ou no app, conforme sessão.
+app.get('/', (req, res) => res.redirect(req.session?.usuario ? '/portal.html' : '/login.html'));
+
 // O app protegido não é servido pelo estático — sem sessão, vai pro login.
 app.get('/portal.html', (req, res, next) => {
   if (!req.session?.usuario) return res.redirect('/login.html');
@@ -59,9 +62,9 @@ app.use(express.static(config.caminhos.publico, {
 
 app.use(rotas);
 
-// 404 de API responde JSON; qualquer outra coisa cai na landing.
+// 404 de API responde JSON; qualquer outra rota desconhecida volta pra '/'.
 app.use('/api', (req, res, next) => next(new ErroApp('Rota não encontrada.', { status: 404, codigo: 'nao_encontrado' })));
-app.use((req, res) => res.sendFile(path.join(config.caminhos.publico, 'index.html')));
+app.use((req, res) => res.redirect('/'));
 
 app.use(tratadorDeErro);
 
@@ -96,7 +99,7 @@ function agendarSincronizacao() {
 }
 
 const servidor = app.listen(config.porta, () => {
-  log.info(`Central Atlas GR no ar em http://localhost:${config.porta}`, {
+  log.info(`AtlasGR Financeiro no ar em http://localhost:${config.porta}`, {
     ambiente: config.ambiente,
     modoDemo: config.demo,
     bitrix: config.bitrix.configurado,

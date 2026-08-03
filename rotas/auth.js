@@ -64,6 +64,7 @@ router.get('/api/sessao', (req, res) => {
     integracoes: {
       bitrix: config.bitrix.configurado,
       integracao: config.integracao.configurado,
+      ia: config.ia.configurado,
     },
   });
 });

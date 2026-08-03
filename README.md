@@ -1,9 +1,10 @@
-# Central Atlas GR
+# AtlasGR Financeiro
 
-Uma central interna para dois processos que hoje vivem espalhados:
-reembolso com alçada de aprovação, e o funil de cobrança do
-financeiro — consolidando a carteira que hoje está no Bitrix24, no
-Connect Plus e no Perfil Securitário.
+Uma central interna para o financeiro da Atlas GR e da Total Track:
+reembolso com alçada de aprovação, o funil de cobrança — consolidando
+a carteira que hoje está no Bitrix24, no Connect Plus e no Perfil
+Securitário —, o cadastro de empresas/filiais e um assistente que
+responde perguntas sobre os dados do próprio portal.
 
 ## Como cada módulo funciona
 
@@ -163,14 +164,18 @@ lib/
   bitrix.js                   → leitura direta do Bitrix (crm.item.list)
   conectores/                 → adaptadores por fonte (bitrix, REST genérico, CSV) + upsert
 
+  empresas.js                 → cadastro de empresas/filiais (fundação multiempresa)
+  ia.js                       → assistente: monta contexto real e chama o provedor de LLM
+
 rotas/                        → API HTTP, um arquivo por domínio
 
 public/
-  index.html, login.html      → páginas públicas
+  login.html                  → página pública (com os logos Atlas GR e Total Track)
   portal.html                 → casca da central (SPA sem framework)
   styles.css                  → sistema visual (identidade Atlas + padrão NewConnect)
+  imagens/                    → logo real da Atlas GR (Manual de Identidade Visual v1.0)
   js/
     nucleo/api.js, ui.js      → acesso à API, componentes de UI
-    telas/                    → uma tela por módulo (início, reembolsos,
-                                 aprovações, cobranças, fontes)
+    telas/                    → uma tela por módulo (início, reembolsos, aprovações,
+                                 cobranças, fontes, empresas, assistente)
 ```

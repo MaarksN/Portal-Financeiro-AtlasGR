@@ -7,6 +7,7 @@ import * as aprovacoes from './telas/aprovacoes.js';
 import * as cobrancas from './telas/cobrancas.js';
 import * as fontes from './telas/fontes.js';
 import * as empresas from './telas/empresas.js';
+import * as ia from './telas/ia.js';
 
 // ------------------------------------------------------------------
 // Casca da central: navegação lateral montada a partir das permissões
@@ -32,6 +33,9 @@ const TELAS = {
   empresas: {
     modulo: empresas, rotulo: 'Empresas', icone: 'usuario', grupo: 'Administração',
     quando: (p) => p.admin,
+  },
+  assistente: {
+    modulo: ia, rotulo: 'Assistente', icone: 'assistente', grupo: 'Central',
   },
 };
 

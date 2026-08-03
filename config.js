@@ -119,6 +119,17 @@ const perfil = {
 };
 perfil.configurado = Boolean(perfil.base && perfil.token);
 
+// --------------------------- Assistente de IA ---------------------------
+// Sem chave, o assistente fica desligado com um aviso claro na tela —
+// nunca finge estar disponível. Modelo e provedor lidos do .env para
+// não prender o código a um fornecedor específico.
+const ia = {
+  provedor: texto('IA_PROVEDOR', 'anthropic'),
+  apiKey: texto('ANTHROPIC_API_KEY'),
+  modelo: texto('IA_MODELO', 'claude-sonnet-5'),
+};
+ia.configurado = Boolean(ia.apiKey);
+
 // ------------------------------ Anexos ------------------------------
 const anexos = {
   pasta: pastaAnexos,
@@ -176,6 +187,7 @@ module.exports = {
   integracao,
   connect,
   perfil,
+  ia,
   anexos,
   politica,
   sincronizacao: {

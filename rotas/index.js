@@ -8,6 +8,7 @@ const auth = require('./auth');
 const reembolsos = require('./reembolsos');
 const cobrancas = require('./cobrancas');
 const empresas = require('./empresas');
+const ia = require('./ia');
 const admin = require('./admin');
 
 const router = express.Router();
@@ -22,6 +23,7 @@ api.use(limiteApi, exigirSessao);
 api.use('/reembolsos', reembolsos);
 api.use('/cobrancas', cobrancas);
 api.use('/empresas', empresas);
+api.use('/ia', ia);
 api.use(admin);
 
 router.use('/api', api);
