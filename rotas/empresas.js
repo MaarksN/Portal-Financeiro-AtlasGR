@@ -15,40 +15,17 @@ const router = express.Router();
 // operacionais.
 router.use(exigirPapel('admin'));
 
-const esquemaEndereco = z.object({
-  logradouro: z.string().trim().max(200).optional().nullable(),
-  numero: z.string().trim().max(20).optional().nullable(),
-  complemento: z.string().trim().max(100).optional().nullable(),
-  bairro: z.string().trim().max(100).optional().nullable(),
-  cidade: z.string().trim().max(100).optional().nullable(),
-  uf: z.string().trim().length(2).optional().nullable(),
-  cep: z.string().trim().max(9).optional().nullable(),
-}).optional().nullable();
-
 const esquemaEmpresa = z.object({
-  nome: z.string().trim().min(1).max(150),
-  razaoSocial: z.string().trim().max(200).optional().nullable(),
-  cnpj: z.string().trim().optional().nullable(),
-  inscricaoEstadual: z.string().trim().max(30).optional().nullable(),
-  inscricaoMunicipal: z.string().trim().max(30).optional().nullable(),
-  regimeTributario: z.enum(['simples', 'lucro_presumido', 'lucro_real']).optional(),
-  endereco: esquemaEndereco,
-  telefone: z.string().trim().max(30).optional().nullable(),
-  email: z.string().trim().email().max(150).optional().nullable().or(z.literal('')),
-  site: z.string().trim().max(200).optional().nullable(),
+  razaoSocial: z.string().trim().min(1).max(200),
+  nomeFantasia: z.string().trim().max(150).optional().nullable(),
+  cnpj: z.string().trim().min(1, 'Informe o CNPJ.'),
 });
 
 const esquemaEmpresaParcial = esquemaEmpresa.partial();
 
 const esquemaFilial = z.object({
   nome: z.string().trim().min(1).max(150),
-  cnpj: z.string().trim().optional().nullable(),
-  inscricaoEstadual: z.string().trim().max(30).optional().nullable(),
-  inscricaoMunicipal: z.string().trim().max(30).optional().nullable(),
-  endereco: esquemaEndereco,
-  telefone: z.string().trim().max(30).optional().nullable(),
-  email: z.string().trim().email().max(150).optional().nullable().or(z.literal('')),
-  principal: z.boolean().optional(),
+  cnpj: z.string().trim().min(1, 'Informe o CNPJ.'),
 });
 
 const esquemaFilialParcial = esquemaFilial.partial();

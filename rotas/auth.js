@@ -65,6 +65,7 @@ router.get('/api/sessao', (req, res) => {
       bitrix: config.bitrix.configurado,
       integracao: config.integracao.configurado,
       ia: config.ia.configurado,
+      emissaoBoleto: config.sicredi.configurado,
     },
   });
 });

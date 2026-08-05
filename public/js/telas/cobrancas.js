@@ -1,4 +1,4 @@
-import { api, comQuery } from '../nucleo/api.js';
+import { api, comQuery, sessao } from '../nucleo/api.js';
 import {
   h, limpar, icone, toast, modal, campo, selecao, lerFormulario,
   moeda, moedaCurta, data, dataHora, desdeQuando, hoje, emDias,
@@ -23,6 +23,128 @@ let painel = null;
 let usuariosCache = null;
 
 const TOM_ESTAGIO = new Map();
+
+// ---------------------- Importar boleto/informativo ----------------------
+function blocoItensBoleto(inf) {
+  if (!inf) return null;
+
+  const linhaAvisoDivergencia = inf.divergente
+    ? h('div', { class: 'aviso alerta' }, icone('alerta', 16), h('div', {},
+      `Soma dos itens (${moeda(inf.somaItensCentavos)}) diverge do total do informativo (${moeda(inf.valorTotalCentavos)}).`))
+    : null;
+
+  const linhasTabela = inf.itens.map((item) => h('tr', {},
+    h('td', {}, item.placa),
+    h('td', {}, item.transportador),
+    h('td', {}, item.mesReferencia),
+    h('td', { class: 'num' }, moeda(item.valorCentavos))));
+
+  const cabecalho = h('tr', {},
+    h('th', {}, 'Placa'), h('th', {}, 'Transportador'), h('th', {}, 'Mês'), h('th', { class: 'num' }, 'Valor'));
+
+  const tabela = h('table', {}, h('thead', {}, cabecalho), h('tbody', {}, ...linhasTabela));
+
+  return h('div', {},
+    h('h4', { style: 'margin:16px 0 8px' }, `Detalhamento por veículo (${inf.itens.length})`),
+    linhaAvisoDivergencia,
+    h('div', { class: 'tabela-envolve', style: 'max-height:220px;overflow-y:auto' }, tabela));
+}
+
+function abrirPreviaBoleto(resultado, aoTerminar) {
+  const b = resultado.boleto;
+  const inf = resultado.informativo;
+
+  const form = h('form', {},
+    b.avisos?.length ? h('div', { class: 'aviso alerta' }, icone('alerta', 16), h('div', {}, b.avisos.join(' '))) : null,
+    h('div', { class: 'linha-campos' },
+      campo('Documento', h('input', { type: 'text', name: 'documento', value: b.documento || '' })),
+      campo('Vencimento', h('input', { type: 'date', name: 'vencimento', required: true, value: b.vencimento || '' }))),
+    h('div', { class: 'linha-campos' },
+      campo('Cliente', h('input', { type: 'text', name: 'clienteNome', required: true, value: b.clienteNome || '' })),
+      campo('CNPJ/CPF do cliente', h('input', { type: 'text', name: 'clienteDoc', value: b.clienteDoc || '' }))),
+    h('div', { class: 'linha-campos' },
+      campo('Valor', h('input', {
+        type: 'text', name: 'valor', required: true,
+        value: b.valorCentavos != null ? (b.valorCentavos / 100).toFixed(2).replace('.', ',') : '',
+      })),
+      campo('Emissão', h('input', { type: 'date', name: 'emissao', value: b.emissao || '' }))),
+    campo('Observação', h('textarea', { name: 'observacao', rows: '2' }, b.refNota ? `Ref. Nota ${b.refNota}` : '')),
+    blocoItensBoleto(inf));
+
+  modal({
+    titulo: 'Conferir e importar',
+    largo: true,
+    corpo: form,
+    acoes: [
+      { rotulo: 'Cancelar', aoClicar: (fechar) => fechar() },
+      {
+        rotulo: 'Confirmar e salvar',
+        estilo: 'sucesso',
+        aoClicar: async (fechar) => {
+          const campos = lerFormulario(form);
+          try {
+            await api.post('/api/cobrancas/importar-boleto/confirmar', {
+              idExterno: b.idExterno,
+              documento: campos.documento,
+              clienteNome: campos.clienteNome,
+              clienteDoc: campos.clienteDoc,
+              valor: campos.valor,
+              emissao: campos.emissao,
+              vencimento: campos.vencimento,
+              observacao: campos.observacao,
+              itens: (inf?.itens || []).map((item) => ({
+                placa: item.placa, transportador: item.transportador,
+                mesReferencia: item.mesReferencia, valor: item.valorCentavos / 100,
+              })),
+            });
+            fechar();
+            toast('Cobrança importada.', 'ok');
+            aoTerminar();
+          } catch (erro) {
+            toast(erro.message, 'erro');
+          }
+        },
+      },
+    ],
+  });
+}
+
+function abrirImportarBoleto(aoTerminar) {
+  const inputBoleto = h('input', { type: 'file', accept: '.pdf,application/pdf', required: true });
+  const inputInformativo = h('input', { type: 'file', accept: '.pdf,application/pdf' });
+
+  const corpo = h('div', {},
+    h('div', { class: 'aviso info' }, icone('relogio', 16),
+      h('div', {}, 'O informativo (detalhamento por veículo) é opcional — sem ele, a cobrança é importada sem itens.')),
+    campo('Boleto (PDF)', inputBoleto),
+    campo('Informativo de veículos (PDF, opcional)', inputInformativo));
+
+  modal({
+    titulo: 'Importar boleto',
+    largo: true,
+    corpo,
+    acoes: [
+      { rotulo: 'Cancelar', aoClicar: (fechar) => fechar() },
+      {
+        rotulo: 'Analisar',
+        estilo: 'sucesso',
+        aoClicar: async (fechar) => {
+          if (!inputBoleto.files[0]) { toast('Escolha o PDF do boleto.', 'erro'); return; }
+          const formData = new FormData();
+          formData.append('boleto', inputBoleto.files[0]);
+          if (inputInformativo.files[0]) formData.append('informativo', inputInformativo.files[0]);
+          try {
+            const resultado = await api.enviarArquivo('/api/cobrancas/importar-boleto', formData);
+            fechar();
+            abrirPreviaBoleto(resultado, aoTerminar);
+          } catch (erro) {
+            toast(erro.message, 'erro');
+          }
+        },
+      },
+    ],
+  });
+}
 
 // ---------------------------- Cartão ----------------------------
 function cartaoDaFatura(fatura, aoMudar) {
@@ -156,6 +278,28 @@ async function abrirDetalhe(id, aoMudar) {
       campo('Estágio no funil', seletorEstagio),
       campo('Responsável', seletorResponsavel));
 
+    // ---- emissão de boleto: estrutura pronta, desligada sem convênio ----
+    const emissaoBoleto = sessao()?.integracoes?.emissaoBoleto
+      ? h('button', {
+        class: 'botao secundario', type: 'button',
+        onclick: async (evento) => {
+          const botao = evento.currentTarget;
+          botao.disabled = true;
+          try {
+            await api.post(`/api/cobrancas/${fatura.id}/emitir-boleto`);
+            toast('Boleto emitido.', 'ok');
+            await recarregarDetalhe();
+          } catch (erro) {
+            toast(erro.message, 'erro');
+          } finally {
+            botao.disabled = false;
+          }
+        },
+      }, icone('enviar'), 'Emitir boleto')
+      : h('div', { class: 'aviso info', style: 'margin-bottom:16px' }, icone('relogio', 16),
+        h('div', {}, h('b', {}, 'Emissão de boleto não configurada. '),
+          'Requer convênio Sicredi (SICREDI_CLIENT_ID e demais — ver .env.example). O boleto pode ser importado em PDF na tela de Cobranças.'));
+
     // ---- registrar contato ----
     const formContato = h('form', {},
       h('div', { class: 'linha-campos' },
@@ -226,6 +370,7 @@ async function abrirDetalhe(id, aoMudar) {
         : null,
       topo,
       controles,
+      emissaoBoleto,
       h('div', { class: 'grade duas' },
         h('div', {}, h('h3', { style: 'font-size:13px;margin-bottom:10px' }, 'Registrar contato'), formContato),
         h('div', {}, h('h3', { style: 'font-size:13px;margin-bottom:10px' }, 'Régua de cobrança'), regua)),
@@ -488,6 +633,10 @@ export async function montar(ctx) {
     titulo: 'Cobranças',
     subtitulo: 'Carteira de recebíveis consolidada — o estágio do funil é controlado aqui',
     acoes: [
+      h('button', {
+        class: 'botao secundario', type: 'button',
+        onclick: () => abrirImportarBoleto(recarregar),
+      }, icone('enviar'), 'Importar boleto'),
       h('a', {
         class: 'botao secundario',
         href: comQuery('/api/cobrancas/exportar', filtros),

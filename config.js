@@ -100,6 +100,26 @@ const integracao = {
 };
 integracao.configurado = Boolean(integracao.url && integracao.segredo);
 
+// ------------------------ Emissão de boleto (Sicredi) ------------------------
+// Emitir um boleto de verdade (com código de barras válido) exige
+// convênio de cobrança registrada com o banco: código de cedente,
+// carteira e um certificado mTLS para autenticar na API deles. Sem
+// isso, `configurado` fica falso e lib/emissaoBoleto.js recusa a
+// emissão com uma mensagem clara — nunca finge ter emitido.
+const sicredi = {
+  ambiente: texto('SICREDI_AMBIENTE', 'homologacao'), // homologacao | producao
+  clientId: texto('SICREDI_CLIENT_ID'),
+  clientSecret: texto('SICREDI_CLIENT_SECRET'),
+  certificadoPath: texto('SICREDI_CERTIFICADO_PATH'),
+  certificadoSenha: texto('SICREDI_CERTIFICADO_SENHA'),
+  codigoCedente: texto('SICREDI_CODIGO_CEDENTE'),
+  carteira: texto('SICREDI_CARTEIRA'),
+  posto: texto('SICREDI_POSTO'),
+};
+sicredi.configurado = Boolean(
+  sicredi.clientId && sicredi.clientSecret && sicredi.certificadoPath && sicredi.codigoCedente,
+);
+
 // -------------------- Fontes externas de cobrança --------------------
 // Connect Plus (legado PHP) e Perfil Securitário (Next.js). Os dois
 // exigem endpoint + credencial próprios; enquanto não houver, o
@@ -188,6 +208,7 @@ module.exports = {
   connect,
   perfil,
   ia,
+  sicredi,
   anexos,
   politica,
   sincronizacao: {
