@@ -57,13 +57,14 @@ router.get('/api/sessao', (req, res) => {
     permissoes: usuario ? {
       aprovaReembolso: usuarios.temPapel(usuario, 'coordenacao', 'gerencia', 'diretoria'),
       financeiro: usuarios.temPapel(usuario, 'financeiro'),
+      comercial: usuarios.temPapel(usuario, 'comercial'),
       ti: usuarios.temPapel(usuario, 'ti'),
       admin: usuarios.temPapel(usuario, 'admin'),
     } : null,
     integracoes: {
-      jira: config.jira.configurado,
       bitrix: config.bitrix.configurado,
       integracao: config.integracao.configurado,
+      ia: config.ia.configurado,
     },
   });
 });

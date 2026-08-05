@@ -2,18 +2,12 @@ import { carregarSessao, sessao, sair } from './nucleo/api.js';
 import { h, limpar, icone, iniciais, toast, carregando } from './nucleo/ui.js';
 
 import * as inicio from './telas/inicio.js';
-import * as chamados from './telas/chamados.js';
 import * as reembolsos from './telas/reembolsos.js';
 import * as aprovacoes from './telas/aprovacoes.js';
 import * as cobrancas from './telas/cobrancas.js';
 import * as fontes from './telas/fontes.js';
-import * as pdv from './telas/pdv.js';
-import * as fiscal from './telas/fiscal.js';
 import * as empresas from './telas/empresas.js';
-import * as cadastros from './telas/cadastros.js';
-import * as clientes from './telas/clientes.js';
-import * as produtos from './telas/produtos.js';
-import * as financeiro from './telas/financeiro.js';
+import * as ia from './telas/ia.js';
 
 // ------------------------------------------------------------------
 // Casca da central: navegação lateral montada a partir das permissões
@@ -23,7 +17,6 @@ import * as financeiro from './telas/financeiro.js';
 
 const TELAS = {
   inicio: { modulo: inicio, rotulo: 'Início', icone: 'inicio', grupo: 'Central' },
-  chamados: { modulo: chamados, rotulo: 'Chamados', icone: 'chamado', grupo: 'Central' },
   reembolsos: { modulo: reembolsos, rotulo: 'Reembolso', icone: 'reembolso', grupo: 'Central' },
   aprovacoes: {
     modulo: aprovacoes, rotulo: 'Aprovações', icone: 'aprovacao', grupo: 'Gestão',
@@ -33,38 +26,17 @@ const TELAS = {
     modulo: cobrancas, rotulo: 'Cobranças', icone: 'cobranca', grupo: 'Gestão',
     quando: (p) => p.financeiro,
   },
-  pdv: {
-    modulo: pdv, rotulo: 'Frente de Caixa', icone: 'cobranca', grupo: 'Fiscal',
-    quando: (p) => p.operador_caixa || p.admin,
-  },
-  fiscal: {
-    modulo: fiscal, rotulo: 'Fiscal', icone: 'fonte', grupo: 'Fiscal',
-    quando: (p) => p.fiscal || p.admin,
-  },
-  empresas: {
-    modulo: empresas, rotulo: 'Empresas e Filiais', icone: 'fonte', grupo: 'Gestão',
-    quando: (p) => p.admin
-  },
-  cadastros: {
-    modulo: cadastros, rotulo: 'Cadastros', icone: 'fonte', grupo: 'Gestão',
-    quando: (p) => p.admin || p.financeiro
-  },
-  financeiro: {
-    modulo: financeiro, rotulo: 'Financeiro', icone: 'cobranca', grupo: 'Gestão',
-    quando: (p) => p.financeiro || p.admin,
-  },
   fontes: {
     modulo: fontes, rotulo: 'Fontes e integrações', icone: 'fonte', grupo: 'Gestão',
     quando: (p) => p.financeiro || p.ti || p.admin,
   },
-  clientes: {
-    modulo: clientes, rotulo: 'Clientes', icone: 'cobranca', grupo: 'Vendas',
-    quando: (p) => p.vendedor || p.gestor_comercial || p.admin,
+  empresas: {
+    modulo: empresas, rotulo: 'Empresas', icone: 'usuario', grupo: 'Administração',
+    quando: (p) => p.admin,
   },
-  produtos: {
-    modulo: produtos, rotulo: 'Produtos', icone: 'cobranca', grupo: 'Vendas',
-    quando: (p) => p.vendedor || p.gestor_comercial || p.admin,
-  }
+  assistente: {
+    modulo: ia, rotulo: 'Assistente', icone: 'assistente', grupo: 'Central',
+  },
 };
 
 const raizPagina = document.getElementById('pagina');
@@ -144,7 +116,7 @@ function desenharFaixaDemo() {
   document.getElementById('faixa-demo').append(
     h('div', { class: 'faixa-demo' },
       icone('alerta', 14),
-      h('span', {}, 'Modo demonstração — dados semeados localmente. Configure Jira, Bitrix e as fontes de cobrança no .env para usar os sistemas reais.')),
+      h('span', {}, 'Modo demonstração — dados semeados localmente. Configure Bitrix e as fontes de cobrança no .env para usar os sistemas reais.')),
   );
 }
 

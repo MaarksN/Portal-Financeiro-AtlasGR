@@ -6,7 +6,6 @@ const multer = require('multer');
 const config = require('../config');
 const conectores = require('../lib/conectores');
 const espelho = require('../lib/espelho');
-const jira = require('../lib/jira');
 const bitrix = require('../lib/bitrix');
 const { consultar } = require('../db');
 const { rota, ErroApp } = require('../lib/erros');
@@ -33,7 +32,6 @@ router.get('/saude', rota(async (req, res) => {
   const verificar = req.query.verificar === '1';
 
   const integracoes = {
-    jira: { configurado: config.jira.configurado, projeto: config.jira.projeto },
     bitrix: { configurado: config.bitrix.configurado },
     integracao: { configurado: config.integracao.configurado },
   };
@@ -41,9 +39,6 @@ router.get('/saude', rota(async (req, res) => {
   // A verificação ativa bate na API de verdade — só sob pedido, para
   // o painel não gastar chamada a cada carregamento.
   if (verificar) {
-    if (config.jira.configurado) {
-      integracoes.jira.checagem = await jira.verificar().catch((erro) => ({ ok: false, erro: erro.message }));
-    }
     if (config.bitrix.configurado) {
       integracoes.bitrix.checagem = await bitrix.verificar().catch((erro) => ({ ok: false, erro: erro.message }));
     }
@@ -74,8 +69,7 @@ router.get('/fontes', exigirPapel('financeiro', 'ti'), (req, res) => {
 router.post('/sincronizar', exigirPapel('financeiro', 'ti'), rota(async (req, res) => {
   const cobrancas = await conectores.sincronizarTudo();
   const fila = await espelho.processarFila();
-  const reconciliacao = await espelho.reconciliar();
-  res.json({ cobrancas, espelho: { fila, reconciliacao } });
+  res.json({ cobrancas, espelho: { fila } });
 }));
 
 router.post(

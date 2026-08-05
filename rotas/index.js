@@ -5,17 +5,11 @@ const express = require('express');
 const { exigirSessao, limiteApi } = require('../lib/seguranca');
 
 const auth = require('./auth');
-const chamados = require('./chamados');
 const reembolsos = require('./reembolsos');
 const cobrancas = require('./cobrancas');
-const clientes = require('./clientes');
-const produtos = require('./produtos');
-const admin = require('./admin');
-const pdv = require('./pdv');
-const fiscal = require('./fiscal');
 const empresas = require('./empresas');
-const cadastros = require('./cadastros');
-const financeiro = require('./financeiro');
+const ia = require('./ia');
+const admin = require('./admin');
 
 const router = express.Router();
 
@@ -26,7 +20,6 @@ router.use(auth);
 const api = express.Router();
 api.use(limiteApi, exigirSessao);
 
-api.use('/chamados', chamados);
 api.use('/reembolsos', reembolsos);
 api.use('/cobrancas', cobrancas);
 api.use('/admin', admin);
