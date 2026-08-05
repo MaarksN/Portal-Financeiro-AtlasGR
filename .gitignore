@@ -1,6 +1,5 @@
-node_modules/
-.env
-.env.*
-!.env.example
-dados/.segredo-dev
-*.log
+dados/*.db*
+cookies.txt
+sessao.json
+headers.txt
+npm_output.log

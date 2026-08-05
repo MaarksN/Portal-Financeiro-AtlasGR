@@ -22,9 +22,16 @@ api.use(limiteApi, exigirSessao);
 
 api.use('/reembolsos', reembolsos);
 api.use('/cobrancas', cobrancas);
+api.use('/admin', admin);
+api.use('/compras', require('./compras'));
+api.use('/estoque', require('./estoque'));
+api.use('/pdv', pdv);
+api.use('/fiscal', fiscal);
 api.use('/empresas', empresas);
-api.use('/ia', ia);
-api.use(admin);
+api.use('/cadastros', cadastros);
+api.use('/clientes', clientes);
+api.use('/produtos', produtos);
+api.use('/financeiro', financeiro);
 
 router.use('/api', api);
 

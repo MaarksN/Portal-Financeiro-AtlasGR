@@ -5,6 +5,7 @@ const session = require('express-session');
 
 const config = require('./config');
 const log = require('./lib/log');
+require('./db/index');
 const { semear } = require('./db/seed');
 const { LojaDeSessaoSqlite } = require('./lib/sessao-store');
 const { cabecalhos, csrf } = require('./lib/seguranca');
