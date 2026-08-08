@@ -38,7 +38,7 @@ Cada módulo deverá possuir:
 - Estados de carregamento, vazio, sucesso e erro.
 - Integração com os demais módulos.
 
-A plataforma deverá utilizar identidade visual própria da Atlas GR e da Total Track. A estrutura funcional poderá servir como referência de mercado, mas não deverá copiar marcas, logotipos, textos proprietários ou identidade visual de terceiros.
+A plataforma deverá utilizar a identidade visual própria da AtlasGR. A estrutura funcional poderá servir como referência de mercado, mas não deverá copiar marcas, logotipos, textos proprietários ou identidade visual de terceiros.
 
 ---
 

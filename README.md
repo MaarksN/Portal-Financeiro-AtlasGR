@@ -1,6 +1,6 @@
 # AtlasGR Financeiro
 
-Uma central interna para o financeiro da Atlas GR e da Total Track:
+Uma central interna para o financeiro da AtlasGR:
 reembolso com alçada de aprovação, o funil de cobrança — consolidando
 a carteira que hoje está no Bitrix24, no Connect Plus e no Perfil
 Securitário —, o cadastro de empresas/filiais e um assistente que
@@ -170,7 +170,7 @@ lib/
 rotas/                        → API HTTP, um arquivo por domínio
 
 public/
-  login.html                  → página pública (com os logos Atlas GR e Total Track)
+  login.html                  → página pública com a identidade AtlasGR
   portal.html                 → casca da central (SPA sem framework)
   styles.css                  → sistema visual (identidade Atlas + padrão NewConnect)
   imagens/                    → logo real da Atlas GR (Manual de Identidade Visual v1.0)

@@ -1,0 +1,30 @@
+:root {
+  --atlas-cor-laranja: #ff5618;
+  --atlas-cor-branco: #ffffff;
+  --atlas-cor-grafite: #333333;
+  --atlas-cor-amarelo: #ffc500;
+  --atlas-cor-laranja-medio: #ff8008;
+  --atlas-cor-laranja-apoio: #ff6b10;
+
+  --atlas-cor-fundo-claro: var(--atlas-cor-branco);
+  --atlas-cor-fundo-escuro: var(--atlas-cor-grafite);
+  --atlas-cor-texto: var(--atlas-cor-grafite);
+  --atlas-cor-acao: var(--atlas-cor-laranja);
+  --atlas-cor-destaque: var(--atlas-cor-amarelo);
+
+  --atlas-gradiente-superficie: linear-gradient(135deg, #ff5618 0%, #ff8008 58%, #ffc500 100%);
+
+  --atlas-fonte-primaria: "Mont", "Montserrat", Arial, sans-serif;
+  --atlas-fonte-secundaria: "Montserrat", Arial, sans-serif;
+  --atlas-peso-light: 300;
+  --atlas-peso-regular: 400;
+  --atlas-peso-medium: 500;
+  --atlas-peso-semibold: 600;
+  --atlas-peso-bold: 700;
+  --atlas-peso-black: 900;
+
+  --atlas-logo-minimo-simbolo: 14px;
+  --atlas-logo-minimo-principal: 56px;
+  --atlas-logo-minimo-assinatura: 114px;
+}
+

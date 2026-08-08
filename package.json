@@ -2,24 +2,54 @@
   "name": "atlas-portal-interno",
   "version": "0.1.0",
   "private": true,
-  "description": "AtlasGR Financeiro — portal interno de reembolso, cobranças e cadastros da Atlas GR e Total Track, integrado ao Bitrix24.",
+  "description": "AtlasGR Financeiro — portal interno de reembolso, cobranças e cadastros da AtlasGR, integrado ao Bitrix24.",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "infra:up": "docker compose -f docker-compose.opensource.yml up -d",
+    "infra:down": "docker compose -f docker-compose.opensource.yml down"
   },
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/auto-instrumentations-node": "^0.79.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.221.0",
+    "@opentelemetry/sdk-node": "^0.221.0",
+    "apexcharts": "^6.7.0",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^13.0.2",
+    "bullmq": "^6.0.9",
+    "casbin": "^5.51.1",
+    "clamscan": "^2.4.0",
+    "cors": "^2.8.6",
+    "currency.js": "^2.0.4",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-rate-limit": "^8.6.1",
     "express-session": "^1.18.0",
     "helmet": "^8.3.0",
+    "ioredis": "^6.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
+    "minio": "^8.0.7",
+    "morgan": "^1.11.0",
     "multer": "^2.2.0",
+    "openid-client": "^6.8.4",
     "pdf-parse": "^2.4.5",
+    "pdfmake": "^0.3.11",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
+    "validator": "^13.15.35",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.10"
   }
 }

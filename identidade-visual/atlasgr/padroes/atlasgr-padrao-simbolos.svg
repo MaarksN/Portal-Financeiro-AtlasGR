@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Padrão de símbolos AtlasGR</title>
+  <desc id="desc">Padrão editável autorizado pelo manual para apoio gráfico.</desc>
+  <defs>
+    <g id="atlas-mark" fill="currentColor">
+      <polygon points="153.4 87.56 167.65 62.87 167.68 62.85 178.13 44.72 178.11 44.68 178.15 44.68 203.95 0 182.97 0 152.31 0 110.4 0 99.17 0 73.37 44.68 73.35 44.72 62.87 62.87 48.62 87.56 48.41 87.94 0 171.76 83.81 171.76 104.78 171.76 125.74 135.49 125.76 135.44 153.19 87.94 153.4 87.56"/>
+      <polygon points="203.07 87.94 175.75 87.94 153.9 125.79 153.9 125.83 137.02 155.01 146.7 171.76 209.57 171.76 251.48 171.76 203.07 87.94"/>
+    </g>
+    <pattern id="pattern" width="320" height="250" patternUnits="userSpaceOnUse" patternTransform="rotate(-8)">
+      <use href="#atlas-mark" x="30" y="20" transform="scale(.55)"/>
+      <use href="#atlas-mark" x="190" y="135" transform="scale(.35)"/>
+    </pattern>
+  </defs>
+  <rect width="1600" height="900" fill="#FF5618"/>
+  <rect width="1600" height="900" fill="url(#pattern)" color="#FFC500" opacity=".34"/>
+</svg>
+

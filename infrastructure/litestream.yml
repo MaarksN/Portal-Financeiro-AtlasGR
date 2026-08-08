@@ -1,0 +1,9 @@
+dbs:
+  - path: /data/atlas.db
+    replicas:
+      - type: s3
+        bucket: portal-financeiro-backups
+        path: atlas.db
+        endpoint: http://minio:9000
+        region: us-east-1
+        force-path-style: true

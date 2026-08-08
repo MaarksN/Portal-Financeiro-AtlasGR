@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AtlasGR - preview da identidade visual</title>
+    <link rel="stylesheet" href="fontes/montserrat-web.css" />
+    <link rel="stylesheet" href="tokens/atlasgr.css" />
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #f5f5f4; color: var(--atlas-cor-texto); font-family: var(--atlas-fonte-secundaria); }
+      main { width: min(1160px, calc(100% - 32px)); margin: 32px auto 80px; }
+      h1, h2 { margin: 0; font-family: var(--atlas-fonte-primaria); }
+      h1 { font-size: clamp(2.5rem, 7vw, 5.5rem); line-height: .94; }
+      h2 { margin-bottom: 20px; font-size: 1.35rem; }
+      p { line-height: 1.65; }
+      section { margin-top: 24px; padding: clamp(24px, 4vw, 48px); border: 1px solid #dededb; border-radius: 24px; background: white; }
+      .hero { min-height: 410px; display: grid; align-content: end; background: var(--atlas-gradiente-superficie); color: white; overflow: hidden; position: relative; }
+      .hero::after { content: ""; position: absolute; inset: 0 0 0 58%; background: url("padroes/atlasgr-grafismo-diagonal.svg") center/cover; mix-blend-mode: soft-light; opacity: .55; }
+      .hero > * { position: relative; z-index: 1; max-width: 740px; }
+      .logos { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+      .logo-card { min-height: 200px; display: grid; place-items: center; padding: 28px; border-radius: 18px; background: #f5f5f4; }
+      .logo-card.dark { background: var(--atlas-cor-grafite); }
+      .logo-card img { width: min(100%, 420px); max-height: 128px; }
+      .palette { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+      .swatch { min-height: 150px; display: flex; align-items: end; padding: 18px; border-radius: 18px; font-weight: 700; }
+      .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; }
+      .rules article { padding: 20px; border-left: 4px solid var(--atlas-cor-laranja); background: #fafaf9; }
+      code { color: var(--atlas-cor-laranja); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <p>Identidade visual oficial</p>
+        <h1>AtlasGR</h1>
+        <p>Inovadora, tecnológica e segura.</p>
+      </section>
+      <section>
+        <h2>Logos</h2>
+        <div class="logos">
+          <div class="logo-card"><img src="logos/atlasgr-logo-principal-positivo.svg" alt="Logo principal positiva AtlasGR" /></div>
+          <div class="logo-card dark"><img src="logos/atlasgr-logo-principal-negativo.svg" alt="Logo principal negativa AtlasGR" /></div>
+        </div>
+      </section>
+      <section>
+        <h2>Paleta</h2>
+        <div class="palette">
+          <div class="swatch" style="background:#ff5618;color:white">#FF5618</div>
+          <div class="swatch" style="background:#333333;color:white">#333333</div>
+          <div class="swatch" style="background:#ffc500">#FFC500</div>
+          <div class="swatch" style="background:#ff8008">#FF8008</div>
+          <div class="swatch" style="background:#ff6b10">#FF6B10</div>
+          <div class="swatch" style="background:#ffffff;border:1px solid #ddd">#FFFFFF</div>
+        </div>
+      </section>
+      <section>
+        <h2>Regras essenciais</h2>
+        <div class="rules">
+          <article><strong>Proteção</strong><p>Reserve ao redor do logo o módulo indicado no manual, baseado na altura do símbolo.</p></article>
+          <article><strong>Redução</strong><p>Símbolo: <code>14 px</code>. Principal: <code>56 px</code>. Com assinatura: <code>114 px</code>.</p></article>
+          <article><strong>Integridade</strong><p>Não altere cores, proporções, composição, orientação ou efeitos do arquivo oficial.</p></article>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

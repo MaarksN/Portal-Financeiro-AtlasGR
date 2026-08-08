@@ -1,0 +1,25 @@
+{
+  "realm": "portal-financeiro",
+  "enabled": true,
+  "displayName": "Portal Financeiro AtlasGR",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "clients": [
+    {
+      "clientId": "portal-financeiro",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "redirectUris": ["http://localhost:3000/*"],
+      "webOrigins": ["http://localhost:3000"]
+    }
+  ],
+  "roles": {
+    "realm": [
+      { "name": "financeiro-admin" },
+      { "name": "aprovador" },
+      { "name": "colaborador" },
+      { "name": "auditor" }
+    ]
+  }
+}

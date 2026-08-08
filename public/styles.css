@@ -5,9 +5,9 @@
    Estrutura, densidade e raios: alinhados ao NewConnect (o padrão
    novo da casa) — barra lateral escura, cartão branco, raio de 8px.
 
-   Tipografia: Plus Jakarta Sans na interface, que é a mesma do
-   NewConnect; Montserrat só no wordmark, por ser a recomendação do
-   manual para a marca em meio digital.
+   Tipografia: Montserrat em toda a interface, família secundária
+   indicada pelo manual para uso digital enquanto a Mont licenciada
+   não estiver disponível no repositório.
    ================================================================== */
 
 :root {
@@ -46,7 +46,7 @@
   --raio: 8px;
   --raio-g: 12px;
 
-  --ui: 'Plus Jakarta Sans', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --ui: 'Montserrat', -apple-system, 'Segoe UI', system-ui, sans-serif;
   --marca: 'Montserrat', var(--ui);
 }
 
@@ -78,14 +78,6 @@ a { color: inherit; }
 
 .logo-divisor { width: 1px; align-self: stretch; background: rgba(255, 255, 255, .16); }
 .mark:not(.neg) .logo-divisor { background: var(--linha-forte); }
-
-/* Total Track não tem arquivo de logo entregue ainda — lockup em
-   tipografia, no lugar do logotipo real, até ele existir. */
-.logo-totaltrack {
-  font-family: var(--marca); font-weight: 800; font-size: 13px; letter-spacing: -.01em; color: #fff;
-  white-space: nowrap;
-}
-.mark:not(.neg) .logo-totaltrack { color: var(--texto); }
 
 .logo-texto { display: flex; flex-direction: column; line-height: 1.05; }
 .logo-texto small {
@@ -437,7 +429,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .mark-login { flex-direction: column; gap: 14px; }
 .mark-login .logo-atlas { width: 128px; }
 .mark-login .logo-divisor { display: none; }
-.mark-login .logo-totaltrack { font-size: 16px; }
 .login-cartao { background: var(--papel); border-radius: var(--raio-g); padding: 26px; width: 100%; box-shadow: var(--sombra-alta); }
 .login-cartao h2 { font-size: 18px; }
 .login-sub { font-size: 12.5px; color: var(--texto3); margin: 4px 0 20px; }

@@ -3,4 +3,8 @@ node_modules/
 .env.*
 !.env.example
 dados/.segredo-dev
+dados/*.db-shm
+dados/*.db-wal
 *.log
+/playwright-report/
+/test-results/

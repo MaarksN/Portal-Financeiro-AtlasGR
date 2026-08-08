@@ -1,0 +1,26 @@
+{
+  "brand": "AtlasGR",
+  "source": "Manual de Identidade Visual - Atlas, versão 1.0, maio de 2021",
+  "colors": {
+    "primary": {
+      "orange": { "hex": "#FF5618", "rgb": [255, 86, 24], "cmyk": [0, 84, 100, 0], "pantone": "172 C" },
+      "white": { "hex": "#FFFFFF", "rgb": [255, 255, 255], "cmyk": [0, 0, 0, 0], "pantone": "000 C" },
+      "graphite": { "hex": "#333333", "rgb": [51, 51, 51], "cmyk": [73, 67, 65, 80], "pantone": "447 C" }
+    },
+    "secondary": {
+      "yellow": { "hex": "#FFC500", "rgb": [255, 197, 0], "cmyk": [0, 26, 100, 0], "pantone": "109 C" },
+      "orangeMedium": { "hex": "#FF8008", "rgb": [255, 128, 8], "cmyk": [0, 6, 100, 0], "pantone": "151 C" },
+      "orangeSupport": { "hex": "#FF6B10", "rgb": [255, 107, 16], "cmyk": [0, 75, 100, 0], "pantone": "2018 C" }
+    }
+  },
+  "typography": {
+    "primary": { "family": "Mont", "weights": [300, 400, 600, 700, 800, 900], "license": "commercial" },
+    "secondary": { "family": "Montserrat", "weights": [300, 400, 500, 600, 700, 900], "license": "free" }
+  },
+  "logo": {
+    "clearSpace": "Altura do símbolo ao redor da marca, conforme o diagrama do manual.",
+    "minimumDigitalWidth": { "symbol": 14, "primary": 56, "withTagline": 114 },
+    "unit": "px"
+  }
+}
+
