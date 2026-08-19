@@ -7,6 +7,14 @@ import * as aprovacoes from './telas/aprovacoes.js';
 import * as cobrancas from './telas/cobrancas.js';
 import * as fontes from './telas/fontes.js';
 import * as empresas from './telas/empresas.js';
+import * as contratos from './telas/contratos.js';
+import * as fiscal from './telas/fiscal.js';
+import * as pdv from './telas/pdv.js';
+import * as cadastros from './telas/cadastros.js';
+import * as relatorios from './telas/relatorios.js';
+import * as financeiro from './telas/financeiro.js';
+import * as produtos from './telas/produtos.js';
+import * as clientes from './telas/clientes.js';
 import * as ia from './telas/ia.js';
 
 // ------------------------------------------------------------------
@@ -32,6 +40,38 @@ const TELAS = {
   },
   empresas: {
     modulo: empresas, rotulo: 'Empresas', icone: 'usuario', grupo: 'Administração',
+    quando: (p) => p.admin,
+  },
+  contratos: {
+    modulo: contratos, rotulo: 'Contratos & Cobrança', icone: 'externo', grupo: 'Gestão',
+    quando: (p) => p.comercial || p.financeiro || p.admin,
+  },
+  cadastros: {
+    modulo: cadastros, rotulo: 'Cadastros', icone: 'usuario', grupo: 'Gestão',
+    quando: (p) => p.admin || p.financeiro || p.comercial,
+  },
+  relatorios: {
+    modulo: relatorios, rotulo: 'Relatórios', icone: 'filtro', grupo: 'Gestão',
+    quando: (p) => p.admin || p.financeiro,
+  },
+  financeiro: {
+    modulo: financeiro, rotulo: 'Financeiro', icone: 'cobranca', grupo: 'Gestão',
+    quando: (p) => p.admin || p.financeiro,
+  },
+  produtos: {
+    modulo: produtos, rotulo: 'Produtos', icone: 'anexo', grupo: 'Gestão',
+    quando: (p) => p.admin || p.comercial,
+  },
+  clientes: {
+    modulo: clientes, rotulo: 'Clientes', icone: 'usuario', grupo: 'Gestão',
+    quando: (p) => p.admin || p.comercial,
+  },
+  fiscal: {
+    modulo: fiscal, rotulo: 'Fiscal', icone: 'anexo', grupo: 'Administração',
+    quando: (p) => p.admin,
+  },
+  pdv: {
+    modulo: pdv, rotulo: 'Frente de caixa', icone: 'busca', grupo: 'Administração',
     quando: (p) => p.admin,
   },
   assistente: {

@@ -3,16 +3,12 @@
 const express = require('express');
 const { z } = require('zod');
 const { consultar, consultarUm, executar, agoraIso } = require('../db');
+const { exigirPapel } = require('../lib/seguranca');
 
 const router = express.Router();
 
 // Apenas usuários com permissão financeira devem acessar este módulo.
-router.use((req, res, next) => {
-  if (!req.usuario.permissoes.financeiro && !req.usuario.permissoes.admin) {
-    return res.status(403).json({ erro: 'Acesso negado. Requer permissão financeira.' });
-  }
-  next();
-});
+router.use(exigirPapel('financeiro'));
 
 // ==============================
 // CONTAS
@@ -26,9 +22,9 @@ router.get('/contas', (req, res) => {
 const schemaConta = z.object({
   nome: z.string().min(1),
   tipo: z.enum(['corrente', 'poupanca', 'carteira', 'caixa', 'aplicacao']),
-  instituicao: z.string().optional(),
-  agencia: z.string().optional(),
-  numero: z.string().optional(),
+  instituicao: z.string().optional().nullable(),
+  agencia: z.string().optional().nullable(),
+  numero: z.string().optional().nullable(),
   saldo_inicial_centavos: z.number().int().default(0),
 });
 
@@ -77,7 +73,7 @@ router.get('/centros-custo', (req, res) => {
 
 const schemaCentro = z.object({
   nome: z.string().min(1),
-  codigo: z.string().optional(),
+  codigo: z.string().optional().nullable(),
   responsavel_email: z.string().email().optional().nullable(),
 });
 
@@ -127,8 +123,8 @@ const schemaLancamento = z.object({
   conta_id: z.number().int().optional().nullable(),
   categoria_id: z.number().int().optional().nullable(),
   centro_custo_id: z.number().int().optional().nullable(),
-  pessoa: z.string().optional(),
-  observacao: z.string().optional()
+  pessoa: z.string().optional().nullable(),
+  observacao: z.string().optional().nullable(),
 });
 
 router.post('/lancamentos', (req, res) => {

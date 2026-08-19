@@ -20,6 +20,7 @@
     "@opentelemetry/exporter-trace-otlp-http": "^0.221.0",
     "@opentelemetry/sdk-node": "^0.221.0",
     "apexcharts": "^6.7.0",
+    "axios": "^1.19.0",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^13.0.2",
     "bullmq": "^6.0.9",
@@ -42,6 +43,7 @@
     "openid-client": "^6.8.4",
     "pdf-parse": "^2.4.5",
     "pdfmake": "^0.3.11",
+    "pg": "^8.23.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
     "validator": "^13.15.35",
@@ -51,5 +53,11 @@
     "@playwright/test": "^1.62.1",
     "supertest": "^7.2.2",
     "vitest": "^4.1.10"
+  },
+  "allowScripts": {
+    "better-sqlite3@13.0.2": true,
+    "core-js@3.50.0": true,
+    "msgpackr-extract@3.0.4": true,
+    "protobufjs@7.6.5": true
   }
 }

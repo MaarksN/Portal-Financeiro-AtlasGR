@@ -1,183 +1,298 @@
-import { h, limpar, icone, toast, formatarMoeda, carregando } from '../nucleo/ui.js';
-import { requisitar } from '../nucleo/api.js';
+import { api } from '../nucleo/api.js';
+import {
+  h, limpar, icone, toast, modal, campo, lerFormulario, selecao,
+  vazio, carregando, etiqueta, indicador, moeda, data,
+} from '../nucleo/ui.js';
 
-let cx;
-let tabAtual = 'geral';
+// ------------------------------------------------------------------
+// Contas a pagar/receber, categorias e centros de custo. Três abas
+// simples (sem router próprio - troca o conteúdo de uma área só).
+// ------------------------------------------------------------------
 
-export async function montar(contexto) {
-  cx = contexto;
-  cx.definirCabecalho({
-    titulo: 'Financeiro',
-    subtitulo: 'Contas a pagar, a receber e fluxo de caixa',
+const ABAS = [
+  { id: 'geral', rotulo: 'Visão geral' },
+  { id: 'lancamentos', rotulo: 'Lançamentos' },
+  { id: 'cadastros', rotulo: 'Cadastros' },
+];
+
+function paraCentavos(valorTexto) {
+  return Math.round(Number(String(valorTexto || '0').replace(',', '.')) * 100);
+}
+
+// -------------------------------- Geral --------------------------------
+async function montarGeral() {
+  const [contas, pendentes] = await Promise.all([
+    api.get('/api/financeiro/contas'),
+    api.get('/api/financeiro/lancamentos?status=pendente'),
+  ]);
+
+  const totalReceber = pendentes.filter((l) => l.tipo === 'receber').reduce((s, l) => s + l.valor_centavos, 0);
+  const totalPagar = pendentes.filter((l) => l.tipo === 'pagar').reduce((s, l) => s + l.valor_centavos, 0);
+
+  const listaContas = contas.length
+    ? h('div', {}, ...contas.map((c) => h('div', {
+      class: 'entre', style: 'padding:8px 0;border-bottom:1px solid var(--linha)',
+    }, h('span', {}, c.nome), h('span', { class: 'silencioso', style: 'font-size:12px' }, c.instituicao || c.tipo))))
+    : vazio('Nenhuma conta cadastrada', 'Cadastre em Cadastros > Contas.');
+
+  return h('div', {},
+    h('div', { class: 'indicadores' },
+      indicador({ rotulo: 'A receber (pendente)', valor: moeda(totalReceber), tom: 'ok' }),
+      indicador({ rotulo: 'A pagar (pendente)', valor: moeda(totalPagar), tom: 'critico' }),
+      indicador({ rotulo: 'Contas cadastradas', valor: contas.length })),
+    h('div', { class: 'cartao', style: 'margin-top:16px' },
+      h('div', { class: 'cartao-cabeca' }, h('h3', {}, 'Contas bancárias / caixa')),
+      h('div', { class: 'cartao-corpo' }, listaContas)));
+}
+
+// ----------------------------- Lançamentos -----------------------------
+function formularioLancamento(contas, categorias, centros) {
+  return h('form', {},
+    campo('Tipo', selecao('tipo', [
+      { valor: 'receber', rotulo: 'A receber' }, { valor: 'pagar', rotulo: 'A pagar' },
+    ])),
+    campo('Descrição', h('input', { type: 'text', name: 'descricao', required: true })),
+    h('div', { class: 'linha-campos' },
+      campo('Valor (R$)', h('input', { type: 'number', name: 'valor', step: '0.01', min: '0.01', required: true })),
+      campo('Vencimento', h('input', { type: 'date', name: 'data_vencimento', required: true }))),
+    h('div', { class: 'linha-campos' },
+      campo('Conta', selecao('conta_id', [{ valor: '', rotulo: '—' }, ...contas.map((c) => ({ valor: c.id, rotulo: c.nome }))])),
+      campo('Categoria', selecao('categoria_id', [{ valor: '', rotulo: '—' }, ...categorias.map((c) => ({ valor: c.id, rotulo: c.nome }))])),
+      campo('Centro de custo', selecao('centro_custo_id', [{ valor: '', rotulo: '—' }, ...centros.map((c) => ({ valor: c.id, rotulo: c.nome }))]))),
+    campo('Pessoa / fornecedor', h('input', { type: 'text', name: 'pessoa' })),
+    campo('Observação', h('textarea', { name: 'observacao' })));
+}
+
+async function abrirNovoLancamento(aoSalvar) {
+  const [contas, categorias, centros] = await Promise.all([
+    api.get('/api/financeiro/contas'),
+    api.get('/api/financeiro/categorias'),
+    api.get('/api/financeiro/centros-custo'),
+  ]);
+  const form = formularioLancamento(contas, categorias, centros);
+  modal({
+    titulo: 'Novo lançamento',
+    corpo: form,
+    acoes: [{
+      rotulo: 'Lançar',
+      estilo: 'sucesso',
+      aoClicar: async (fechar) => {
+        try {
+          const dados = lerFormulario(form);
+          await api.post('/api/financeiro/lancamentos', {
+            tipo: dados.tipo,
+            descricao: dados.descricao,
+            valor_centavos: paraCentavos(dados.valor),
+            data_vencimento: dados.data_vencimento,
+            conta_id: dados.conta_id ? Number(dados.conta_id) : null,
+            categoria_id: dados.categoria_id ? Number(dados.categoria_id) : null,
+            centro_custo_id: dados.centro_custo_id ? Number(dados.centro_custo_id) : null,
+            pessoa: dados.pessoa,
+            observacao: dados.observacao,
+          });
+          fechar();
+          toast('Lançamento criado.', 'ok');
+          aoSalvar();
+        } catch (erro) {
+          toast(erro.message, 'erro');
+        }
+      },
+    }],
   });
+}
 
-  const abas = h('div', { class: 'abas' },
-    h('button', { class: `aba ${tabAtual === 'geral' ? 'ativa' : ''}`, onclick: (e) => trocarAba('geral', e.target) }, 'Visão Geral'),
-    h('button', { class: `aba ${tabAtual === 'lancamentos' ? 'ativa' : ''}`, onclick: (e) => trocarAba('lancamentos', e.target) }, 'Lançamentos'),
-    h('button', { class: `aba ${tabAtual === 'cadastros' ? 'ativa' : ''}`, onclick: (e) => trocarAba('cadastros', e.target) }, 'Cadastros')
-  );
+async function montarLancamentos(recarregarAba) {
+  const raiz = h('div', {});
+  const areaTabela = h('div', { class: 'cartao-corpo sem-espaco' }, carregando());
 
-  const container = h('div', { id: 'financeiro-conteudo' });
-  const raiz = h('div', {}, abas, container);
+  const carregar = async () => {
+    const lancamentos = await api.get('/api/financeiro/lancamentos');
+    if (!lancamentos.length) {
+      limpar(areaTabela).append(vazio('Nenhum lançamento', 'Lance a primeira conta a pagar ou a receber.'));
+      return;
+    }
 
-  // Render initial tab content after short delay so container exists
-  setTimeout(() => renderizarAbaAtual(container), 0);
+    const corpo = h('tbody', {});
+    for (const l of lancamentos) {
+      corpo.append(h('tr', {},
+        h('td', {}, etiqueta(l.tipo === 'pagar' ? 'A pagar' : 'A receber', l.tipo === 'pagar' ? 'critico' : 'ok')),
+        h('td', {}, l.descricao),
+        h('td', { class: 'num' }, moeda(l.valor_centavos)),
+        h('td', {}, data(l.data_vencimento)),
+        h('td', {}, etiqueta(l.status, l.status === 'pago' ? 'ok' : l.status === 'cancelado' ? 'neutro' : 'alerta')),
+        h('td', {}, l.status === 'pendente' ? h('button', {
+          class: 'botao secundario pequeno', type: 'button',
+          onclick: async () => {
+            try {
+              await api.post(`/api/financeiro/lancamentos/${l.id}/pagar`);
+              toast('Lançamento baixado.', 'ok');
+              carregar();
+              recarregarAba?.();
+            } catch (erro) {
+              toast(erro.message, 'erro');
+            }
+          },
+        }, 'Baixar') : null)));
+    }
 
+    limpar(areaTabela).append(h('div', { class: 'tabela-envolve' }, h('table', {},
+      h('thead', {}, h('tr', {},
+        h('th', {}, 'Tipo'), h('th', {}, 'Descrição'), h('th', { class: 'num' }, 'Valor'),
+        h('th', {}, 'Vencimento'), h('th', {}, 'Status'), h('th', {}, ''))),
+      corpo)));
+  };
+
+  raiz.append(h('div', { class: 'cartao' },
+    h('div', { class: 'cartao-cabeca' },
+      h('h3', {}, 'Lançamentos'),
+      h('button', {
+        class: 'botao secundario pequeno acoes', type: 'button',
+        onclick: () => abrirNovoLancamento(carregar),
+      }, icone('mais', 14), 'Novo lançamento')),
+    areaTabela));
+
+  await carregar();
   return raiz;
 }
 
-function trocarAba(novaAba, target) {
-  tabAtual = novaAba;
-  const container = document.getElementById('financeiro-conteudo');
-  if (container) {
-    document.querySelectorAll('.aba').forEach(el => el.classList.remove('ativa'));
-    if (target) target.classList.add('ativa');
-    renderizarAbaAtual(container);
-  }
-}
-
-async function renderizarAbaAtual(container) {
-  limpar(container).append(carregando());
-  try {
-    if (tabAtual === 'geral') {
-      const conteudo = await renderizarGeral();
-      limpar(container).append(conteudo);
-    } else if (tabAtual === 'lancamentos') {
-      const conteudo = await renderizarLancamentos();
-      limpar(container).append(conteudo);
-    } else if (tabAtual === 'cadastros') {
-      const conteudo = await renderizarCadastros();
-      limpar(container).append(conteudo);
-    }
-  } catch (erro) {
-    limpar(container).append(
-      h('div', { class: 'aviso critico' }, 'Erro ao carregar dados do financeiro: ', erro.message)
-    );
-  }
-}
-
-async function renderizarGeral() {
-  const contas = await requisitar('/api/financeiro/contas');
-  const lancamentos = await requisitar('/api/financeiro/lancamentos?status=pendente');
-
-  let totalReceber = 0;
-  let totalPagar = 0;
-
-  lancamentos.forEach(l => {
-    if (l.tipo === 'receber') totalReceber += l.valor_centavos;
-    if (l.tipo === 'pagar') totalPagar += l.valor_centavos;
-  });
-
-  return h('div', { class: 'grade' },
-    h('div', { class: 'cartao' }, h('div', { class: 'cartao-corpo' },
-      h('h3', {}, 'A Receber (Pendente)'),
-      h('div', { class: 'valor-destaque positivo' }, formatarMoeda(totalReceber))
-    )),
-    h('div', { class: 'cartao' }, h('div', { class: 'cartao-corpo' },
-      h('h3', {}, 'A Pagar (Pendente)'),
-      h('div', { class: 'valor-destaque negativo' }, formatarMoeda(totalPagar))
-    )),
-    h('div', { class: 'cartao' }, h('div', { class: 'cartao-corpo' },
-      h('h3', {}, 'Contas Bancárias / Caixa'),
-      h('ul', { class: 'lista-simples' },
-        contas.map(c => h('li', {},
-          h('b', {}, c.nome),
-          h('span', { class: 'detalhe' }, c.instituicao ? ` - ${c.instituicao}` : '')
-        ))
-      ),
-      contas.length === 0 ? h('div', { class: 'vazio' }, 'Nenhuma conta cadastrada') : null
-    ))
-  );
-}
-
-async function renderizarLancamentos() {
-  const lancamentos = await requisitar('/api/financeiro/lancamentos');
-
-  const trs = lancamentos.map(l => h('tr', {},
-    h('td', {}, h('span', { class: `tag ${l.tipo === 'pagar' ? 'negativo' : 'positivo'}` }, l.tipo.toUpperCase())),
-    h('td', {}, l.descricao),
-    h('td', {}, formatarMoeda(l.valor_centavos)),
-    h('td', {}, new Date(l.data_vencimento).toLocaleDateString('pt-BR', { timeZone: 'UTC' })),
-    h('td', {}, h('span', { class: `tag ${l.status === 'pago' ? 'sucesso' : 'neutro'}` }, l.status)),
-    h('td', { class: 'acoes' },
-      l.status === 'pendente'
-        ? h('button', { class: 'botao secundario pequeno', onclick: () => pagarLancamento(l.id) }, icone('check', 14), ' Baixar')
-        : null
-    )
-  ));
-
+// ------------------------------ Cadastros ------------------------------
+function blocoCadastro({ titulo, itens, aoNovo, linha }) {
   return h('div', { class: 'cartao' },
-    h('div', { class: 'cartao-cabecalho' },
-      h('h2', {}, 'Lançamentos'),
-      h('button', { class: 'botao primario', onclick: abrirModalLancamento }, '+ Novo Lançamento')
-    ),
-    h('div', { class: 'tabela-responsiva' },
-      h('table', {},
-        h('thead', {}, h('tr', {},
-          h('th', {}, 'Tipo'), h('th', {}, 'Descrição'), h('th', {}, 'Valor'), h('th', {}, 'Vencimento'), h('th', {}, 'Status'), h('th', {}, 'Ações')
-        )),
-        h('tbody', {}, trs.length ? trs : h('tr', {}, h('td', { colspan: 6, class: 'vazio' }, 'Nenhum lançamento encontrado')))
-      )
-    )
-  );
+    h('div', { class: 'cartao-cabeca' },
+      h('h3', {}, titulo),
+      h('button', { class: 'botao secundario pequeno acoes', type: 'button', onclick: aoNovo }, icone('mais', 14))),
+    h('div', { class: 'cartao-corpo' },
+      itens.length
+        ? h('div', {}, ...itens.map((item) => h('div', {
+          class: 'entre', style: 'padding:7px 0;border-bottom:1px solid var(--linha);font-size:13px',
+        }, linha(item))))
+        : h('div', { class: 'silencioso', style: 'font-size:12.5px' }, 'Nenhum registro ainda.')));
 }
 
-async function pagarLancamento(id) {
-  if (!confirm('Confirmar baixa deste lançamento?')) return;
-  try {
-    await requisitar(`/api/financeiro/lancamentos/${id}/pagar`, { method: 'POST' });
-    toast('Lançamento baixado com sucesso', 'sucesso');
-    cx.recarregar();
-  } catch (erro) {
-    toast(`Erro: ${erro.message}`, 'erro');
-  }
-}
-
-function abrirModalLancamento() {
-  alert('Modal de novo lançamento a ser implementado');
-}
-
-async function renderizarCadastros() {
+async function montarCadastros(recarregarAba) {
   const [contas, categorias, centros] = await Promise.all([
-    requisitar('/api/financeiro/contas'),
-    requisitar('/api/financeiro/categorias'),
-    requisitar('/api/financeiro/centros-custo')
+    api.get('/api/financeiro/contas'),
+    api.get('/api/financeiro/categorias'),
+    api.get('/api/financeiro/centros-custo'),
   ]);
 
-  return h('div', { class: 'grade' },
-    // Contas
-    h('div', { class: 'cartao' },
-      h('div', { class: 'cartao-cabecalho' }, h('h3', {}, 'Contas'), h('button', { class: 'botao secundario pequeno', onclick: novaConta }, '+ Conta')),
-      h('div', { class: 'cartao-corpo' },
-        h('ul', { class: 'lista-simples' },
-          contas.map(c => h('li', {}, h('b', {}, c.nome), h('span', { class: 'detalhe' }, c.tipo)))
-        ),
-        contas.length === 0 ? h('div', { class: 'vazio' }, 'Nenhuma conta') : null
-      )
-    ),
-    // Categorias
-    h('div', { class: 'cartao' },
-      h('div', { class: 'cartao-cabecalho' }, h('h3', {}, 'Categorias'), h('button', { class: 'botao secundario pequeno', onclick: novaCategoria }, '+ Categoria')),
-      h('div', { class: 'cartao-corpo' },
-        h('ul', { class: 'lista-simples' },
-          categorias.map(c => h('li', {}, h('span', { class: `tag ${c.tipo === 'despesa' ? 'negativo' : 'positivo'}` }, c.tipo.toUpperCase()), ' ', h('b', {}, c.nome)))
-        ),
-        categorias.length === 0 ? h('div', { class: 'vazio' }, 'Nenhuma categoria') : null
-      )
-    ),
-    // Centros de Custo
-    h('div', { class: 'cartao' },
-      h('div', { class: 'cartao-cabecalho' }, h('h3', {}, 'Centros de Custo'), h('button', { class: 'botao secundario pequeno', onclick: novoCentroCusto }, '+ Centro')),
-      h('div', { class: 'cartao-corpo' },
-        h('ul', { class: 'lista-simples' },
-          centros.map(c => h('li', {}, h('b', {}, c.nome), h('span', { class: 'detalhe' }, c.codigo ? ` (${c.codigo})` : '')))
-        ),
-        centros.length === 0 ? h('div', { class: 'vazio' }, 'Nenhum centro de custo') : null
-      )
-    )
-  );
+  const novaConta = () => {
+    const form = h('form', {},
+      campo('Nome', h('input', { type: 'text', name: 'nome', required: true })),
+      campo('Tipo', selecao('tipo', ['corrente', 'poupanca', 'carteira', 'caixa', 'aplicacao'])),
+      campo('Instituição', h('input', { type: 'text', name: 'instituicao' })));
+    modal({
+      titulo: 'Nova conta', corpo: form,
+      acoes: [{
+        rotulo: 'Cadastrar', estilo: 'sucesso',
+        aoClicar: async (fechar) => {
+          try {
+            const dados = lerFormulario(form);
+            await api.post('/api/financeiro/contas', { ...dados, saldo_inicial_centavos: 0 });
+            fechar();
+            toast('Conta cadastrada.', 'ok');
+            recarregarAba();
+          } catch (erro) {
+            toast(erro.message, 'erro');
+          }
+        },
+      }],
+    });
+  };
+
+  const novaCategoria = () => {
+    const form = h('form', {},
+      campo('Nome', h('input', { type: 'text', name: 'nome', required: true })),
+      campo('Tipo', selecao('tipo', [{ valor: 'receita', rotulo: 'Receita' }, { valor: 'despesa', rotulo: 'Despesa' }])));
+    modal({
+      titulo: 'Nova categoria', corpo: form,
+      acoes: [{
+        rotulo: 'Cadastrar', estilo: 'sucesso',
+        aoClicar: async (fechar) => {
+          try {
+            await api.post('/api/financeiro/categorias', lerFormulario(form));
+            fechar();
+            toast('Categoria cadastrada.', 'ok');
+            recarregarAba();
+          } catch (erro) {
+            toast(erro.message, 'erro');
+          }
+        },
+      }],
+    });
+  };
+
+  const novoCentro = () => {
+    const form = h('form', {},
+      campo('Nome', h('input', { type: 'text', name: 'nome', required: true })),
+      campo('Código', h('input', { type: 'text', name: 'codigo' })));
+    modal({
+      titulo: 'Novo centro de custo', corpo: form,
+      acoes: [{
+        rotulo: 'Cadastrar', estilo: 'sucesso',
+        aoClicar: async (fechar) => {
+          try {
+            await api.post('/api/financeiro/centros-custo', lerFormulario(form));
+            fechar();
+            toast('Centro de custo cadastrado.', 'ok');
+            recarregarAba();
+          } catch (erro) {
+            toast(erro.message, 'erro');
+          }
+        },
+      }],
+    });
+  };
+
+  return h('div', { class: 'grade duas' },
+    blocoCadastro({
+      titulo: 'Contas', itens: contas, aoNovo: novaConta,
+      linha: (c) => [h('b', {}, c.nome), h('span', { class: 'direita silencioso' }, c.tipo)],
+    }),
+    blocoCadastro({
+      titulo: 'Categorias', itens: categorias, aoNovo: novaCategoria,
+      linha: (c) => [etiqueta(c.tipo, c.tipo === 'despesa' ? 'critico' : 'ok'), ' ', h('b', {}, c.nome)],
+    }),
+    blocoCadastro({
+      titulo: 'Centros de custo', itens: centros, aoNovo: novoCentro,
+      linha: (c) => [h('b', {}, c.nome), c.codigo ? h('span', { class: 'direita silencioso' }, c.codigo) : null],
+    }));
 }
 
-function novaConta() { alert('Modal de nova conta a ser implementado'); }
-function novaCategoria() { alert('Modal de nova categoria a ser implementado'); }
-function novoCentroCusto() { alert('Modal de novo centro de custo a ser implementado'); }
+// --------------------------------- Casca --------------------------------
+export async function montar(ctx) {
+  ctx.definirCabecalho({ titulo: 'Financeiro', subtitulo: 'Contas a pagar, a receber e fluxo de caixa' });
+
+  const area = h('div', {}, carregando());
+  let abaAtual = 'geral';
+
+  const renderizarBotoes = () => h('div', { class: 'row', style: 'margin-bottom:16px' },
+    ...ABAS.map((aba) => h('button', {
+      class: `botao ${aba.id === abaAtual ? '' : 'secundario'} pequeno`,
+      type: 'button',
+      onclick: () => irPara(aba.id),
+    }, aba.rotulo)));
+
+  const raiz = h('div', {}, renderizarBotoes(), area);
+
+  async function renderizarConteudo() {
+    limpar(area).append(carregando());
+    try {
+      const conteudo = abaAtual === 'geral' ? await montarGeral()
+        : abaAtual === 'lancamentos' ? await montarLancamentos(renderizarConteudo)
+          : await montarCadastros(renderizarConteudo);
+      limpar(area).append(conteudo);
+    } catch (erro) {
+      limpar(area).append(h('div', { class: 'aviso critico' }, icone('alerta', 16), h('div', {}, erro.message)));
+    }
+  }
+
+  function irPara(aba) {
+    abaAtual = aba;
+    limpar(raiz).append(renderizarBotoes(), area);
+    renderizarConteudo();
+  }
+
+  await renderizarConteudo();
+  return raiz;
+}

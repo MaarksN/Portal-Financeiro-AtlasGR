@@ -100,6 +100,12 @@ const integracao = {
 };
 integracao.configurado = Boolean(integracao.url && integracao.segredo);
 
+// --------- Módulo Contratos & Cobrança (Bitrix x D4Sign x NXFacil) ---------
+// Serviço à parte, com login e banco próprios — o portal só linka pra lá.
+const contratos = {
+  url: texto('CONTRATOS_URL', 'https://atlasgr-integracao-bitrix-d4sign.onrender.com'),
+};
+
 // ------------------------ Emissão de boleto (Sicredi) ------------------------
 // Emitir um boleto de verdade (com código de barras válido) exige
 // convênio de cobrança registrada com o banco: código de cedente,
@@ -205,6 +211,7 @@ module.exports = {
   },
   bitrix,
   integracao,
+  contratos,
   connect,
   perfil,
   ia,

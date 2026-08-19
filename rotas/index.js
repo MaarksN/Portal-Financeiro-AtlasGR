@@ -10,6 +10,13 @@ const cobrancas = require('./cobrancas');
 const empresas = require('./empresas');
 const ia = require('./ia');
 const admin = require('./admin');
+const financeiro = require('./financeiro');
+const fiscal = require('./fiscal');
+const pdv = require('./pdv');
+const cadastros = require('./cadastros');
+const relatorios = require('./relatorios');
+const produtos = require('./produtos');
+const clientes = require('./clientes');
 
 const router = express.Router();
 
@@ -24,6 +31,13 @@ api.use('/reembolsos', reembolsos);
 api.use('/cobrancas', cobrancas);
 api.use('/empresas', empresas);
 api.use('/ia', ia);
+api.use('/financeiro', financeiro);
+api.use('/fiscal', fiscal);
+api.use('/pdv', pdv);
+api.use('/cadastros', cadastros);
+api.use('/relatorios', relatorios);
+api.use('/produtos', produtos);
+api.use('/clientes', clientes);
 api.use(admin);
 
 router.use('/api', api);

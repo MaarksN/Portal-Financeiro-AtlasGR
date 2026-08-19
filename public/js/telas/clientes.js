@@ -1,147 +1,106 @@
 import { api } from '../nucleo/api.js';
-import { h, limpar, moeda, carregando } from '../nucleo/ui.js';
+import {
+  h, limpar, icone, toast, modal, campo, lerFormulario, selecao,
+  vazio, carregando, moeda, etiqueta,
+} from '../nucleo/ui.js';
 
-export async function montar(raiz, contexto) {
-  contexto.titulo('Clientes', 'Gestão de carteira de clientes');
+// ------------------------------------------------------------------
+// Carteira de clientes. Mesma estrutura de telas/produtos.js.
+// ------------------------------------------------------------------
 
-  contexto.acoes(
-    h('button', { class: 'botao primario', onclick: () => mostrarFormulario() }, 'Novo cliente')
-  );
+function formularioCliente(cliente) {
+  return h('form', {},
+    campo('Tipo', selecao('tipo', [
+      { valor: 'PF', rotulo: 'Pessoa física' },
+      { valor: 'PJ', rotulo: 'Pessoa jurídica' },
+    ], cliente?.tipo || 'PJ')),
+    campo('Nome / razão social', h('input', { type: 'text', name: 'nome', required: true, value: cliente?.nome || '' })),
+    campo('Documento (CPF/CNPJ)', h('input', { type: 'text', name: 'documento', value: cliente?.documento || '' })),
+    h('div', { class: 'linha-campos' },
+      campo('E-mail', h('input', { type: 'email', name: 'email', value: cliente?.email || '' })),
+      campo('Telefone', h('input', { type: 'text', name: 'telefone', value: cliente?.telefone || '' }))),
+    campo('Endereço completo', h('input', { type: 'text', name: 'endereco', value: cliente?.endereco || '' })),
+    h('div', { class: 'linha-campos' },
+      campo('Limite de crédito (R$)', h('input', {
+        type: 'number', name: 'limiteCredito', step: '0.01', min: '0',
+        value: cliente ? (cliente.limite_credito / 100).toFixed(2) : '0.00',
+      })),
+      campo('E-mail do vendedor responsável', h('input', { type: 'email', name: 'vendedorEmail', value: cliente?.vendedor_email || '' }))));
+}
 
-  const container = h('div', { class: 'tabela-container' });
-  raiz.appendChild(container);
+function abrirFormulario(cliente, aoSalvar) {
+  const form = formularioCliente(cliente);
+  modal({
+    titulo: cliente ? `Editar ${cliente.nome}` : 'Novo cliente',
+    corpo: form,
+    acoes: [{
+      rotulo: cliente ? 'Salvar' : 'Cadastrar',
+      estilo: 'sucesso',
+      aoClicar: async (fechar) => {
+        try {
+          const dados = lerFormulario(form);
+          const payload = {
+            tipo: dados.tipo,
+            nome: dados.nome,
+            documento: dados.documento,
+            email: dados.email,
+            telefone: dados.telefone,
+            endereco: dados.endereco,
+            limiteCredito: Math.round(Number(String(dados.limiteCredito || '0').replace(',', '.')) * 100),
+            vendedorEmail: dados.vendedorEmail,
+          };
+          if (cliente) await api.put(`/api/clientes/${cliente.id}`, payload);
+          else await api.post('/api/clientes', payload);
+          fechar();
+          toast(cliente ? 'Cliente atualizado.' : 'Cliente cadastrado.', 'ok');
+          aoSalvar();
+        } catch (erro) {
+          toast(erro.message, 'erro');
+        }
+      },
+    }],
+  });
+}
 
-  async function carregar() {
-    limpar(container);
-    container.appendChild(carregando());
-    try {
-      const clientes = await api.get('/clientes');
-      renderizarTabela(clientes);
-    } catch (erro) {
-      limpar(container);
-      container.appendChild(h('div', { class: 'estado-vazio erro' }, erro.message));
-    }
-  }
+export async function montar(ctx) {
+  const raiz = h('div', {});
+  const areaTabela = h('div', { class: 'cartao-corpo sem-espaco' }, carregando());
 
-  function renderizarTabela(clientes) {
-    limpar(container);
-    if (clientes.length === 0) {
-      container.appendChild(h('div', { class: 'estado-vazio' }, 'Nenhum cliente cadastrado.'));
+  const recarregar = async () => {
+    const lista = await api.get('/api/clientes');
+
+    if (!lista.length) {
+      limpar(areaTabela).append(vazio('Nenhum cliente cadastrado', 'Cadastre o primeiro cliente da carteira.'));
       return;
     }
 
-    const tbody = h('tbody');
-    clientes.forEach(cliente => {
-      const tr = h('tr', { onclick: () => mostrarFormulario(cliente), style: 'cursor:pointer' },
-        h('td', {}, cliente.nome),
-        h('td', {}, cliente.documento || '-'),
-        h('td', {}, cliente.email || '-'),
-        h('td', {}, cliente.telefone || '-'),
-        h('td', {}, moeda(cliente.limite_credito))
-      );
-      tbody.appendChild(tr);
-    });
+    const corpo = h('tbody', {});
+    for (const cliente of lista) {
+      corpo.append(h('tr', { class: 'clicavel', onclick: () => abrirFormulario(cliente, recarregar) },
+        h('td', {}, h('div', { class: 'forte' }, cliente.nome), etiqueta(cliente.tipo, '')),
+        h('td', {}, cliente.documento || h('span', { class: 'silencioso' }, '—')),
+        h('td', {}, cliente.email || h('span', { class: 'silencioso' }, '—')),
+        h('td', {}, cliente.telefone || h('span', { class: 'silencioso' }, '—')),
+        h('td', { class: 'num' }, moeda(cliente.limite_credito))));
+    }
 
-    const tabela = h('table', { class: 'tabela-dados' },
-      h('thead', {},
-        h('tr', {},
-          h('th', {}, 'Nome'),
-          h('th', {}, 'Documento'),
-          h('th', {}, 'E-mail'),
-          h('th', {}, 'Telefone'),
-          h('th', {}, 'Limite de crédito')
-        )
-      ),
-      tbody
-    );
-    container.appendChild(tabela);
-  }
+    limpar(areaTabela).append(h('div', { class: 'tabela-envolve' }, h('table', {},
+      h('thead', {}, h('tr', {},
+        h('th', {}, 'Cliente'), h('th', {}, 'Documento'), h('th', {}, 'E-mail'),
+        h('th', {}, 'Telefone'), h('th', { class: 'num' }, 'Limite de crédito'))),
+      corpo)));
+  };
 
-  function mostrarFormulario(cliente = null) {
-    limpar(raiz);
-    contexto.titulo(cliente ? 'Editar Cliente' : 'Novo Cliente');
-    contexto.acoes(
-      h('button', { class: 'botao fantasma', onclick: () => montar(raiz, contexto) }, 'Voltar')
-    );
+  ctx.definirCabecalho({
+    titulo: 'Clientes',
+    subtitulo: 'Gestão da carteira de clientes',
+    acoes: [h('button', { class: 'botao', type: 'button', onclick: () => abrirFormulario(null, recarregar) },
+      icone('mais'), 'Novo cliente')],
+  });
 
-    const form = h('form', { class: 'formulario-padrao', onsubmit: async (e) => {
-      e.preventDefault();
-      const dados = {
-        tipo: form.tipo.value,
-        nome: form.nome.value,
-        documento: form.documento.value,
-        email: form.email.value,
-        telefone: form.telefone.value,
-        endereco: form.endereco.value,
-        limiteCredito: Number(form.limiteCredito.value.replace(/\D/g, '')) || 0,
-        vendedorEmail: form.vendedorEmail.value
-      };
+  raiz.append(h('div', { class: 'cartao' },
+    h('div', { class: 'cartao-cabeca' }, h('h3', {}, 'Clientes cadastrados')), areaTabela));
 
-      try {
-        const btn = form.querySelector('button[type="submit"]');
-        btn.disabled = true;
-        btn.textContent = 'Salvando...';
-
-        if (cliente) {
-          await api.put(`/clientes/${cliente.id}`, dados);
-        } else {
-          await api.post('/clientes', dados);
-        }
-        montar(raiz, contexto);
-      } catch (erro) {
-        alert(erro.message);
-        btn.disabled = false;
-        btn.textContent = 'Salvar';
-      }
-    }});
-
-    form.innerHTML = `
-      <div class="campo">
-        <label>Tipo</label>
-        <select name="tipo" required>
-          <option value="PF" ${cliente?.tipo === 'PF' ? 'selected' : ''}>Pessoa Física</option>
-          <option value="PJ" ${cliente?.tipo === 'PJ' ? 'selected' : ''}>Pessoa Jurídica</option>
-        </select>
-      </div>
-      <div class="campo">
-        <label>Nome / Razão Social</label>
-        <input type="text" name="nome" required value="${cliente?.nome || ''}">
-      </div>
-      <div class="campo">
-        <label>Documento (CPF/CNPJ)</label>
-        <input type="text" name="documento" value="${cliente?.documento || ''}">
-      </div>
-      <div class="linha-campos">
-        <div class="campo">
-          <label>E-mail</label>
-          <input type="email" name="email" value="${cliente?.email || ''}">
-        </div>
-        <div class="campo">
-          <label>Telefone</label>
-          <input type="text" name="telefone" value="${cliente?.telefone || ''}">
-        </div>
-      </div>
-      <div class="campo">
-        <label>Endereço completo</label>
-        <input type="text" name="endereco" value="${cliente?.endereco || ''}">
-      </div>
-      <div class="linha-campos">
-        <div class="campo">
-          <label>Limite de Crédito (R$)</label>
-          <input type="text" name="limiteCredito" value="${cliente ? (cliente.limite_credito / 100).toFixed(2) : '0.00'}">
-        </div>
-        <div class="campo">
-          <label>E-mail do Vendedor Responsável</label>
-          <input type="email" name="vendedorEmail" value="${cliente?.vendedor_email || ''}">
-        </div>
-      </div>
-      <div class="acoes-form">
-        <button type="submit" class="botao primario">Salvar</button>
-      </div>
-    `;
-
-    raiz.appendChild(form);
-  }
-
-  carregar();
+  await recarregar();
+  return raiz;
 }

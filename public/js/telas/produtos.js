@@ -1,144 +1,110 @@
 import { api } from '../nucleo/api.js';
-import { h, limpar, moeda, carregando } from '../nucleo/ui.js';
+import {
+  h, limpar, icone, toast, modal, campo, lerFormulario,
+  vazio, carregando, moeda,
+} from '../nucleo/ui.js';
 
-export async function montar(raiz, contexto) {
-  contexto.titulo('Produtos', 'Catálogo de produtos');
+// ------------------------------------------------------------------
+// Catálogo de produtos. Lista simples com criação/edição em modal —
+// mesmo padrão de telas/empresas.js.
+// ------------------------------------------------------------------
 
-  contexto.acoes(
-    h('button', { class: 'botao primario', onclick: () => mostrarFormulario() }, 'Novo produto')
-  );
+function formularioProduto(produto) {
+  return h('form', {},
+    h('div', { class: 'linha-campos' },
+      campo('Nome do produto', h('input', { type: 'text', name: 'nome', required: true, value: produto?.nome || '' })),
+      campo('SKU', h('input', { type: 'text', name: 'sku', value: produto?.sku || '' }))),
+    campo('Descrição', h('textarea', { name: 'descricao' }, produto?.descricao || '')),
+    h('div', { class: 'linha-campos' },
+      campo('Categoria', h('input', { type: 'text', name: 'categoria', value: produto?.categoria || '' })),
+      campo('Marca', h('input', { type: 'text', name: 'marca', value: produto?.marca || '' })),
+      campo('Unidade (ex.: UN, KG)', h('input', { type: 'text', name: 'unidade', value: produto?.unidade || '' }))),
+    h('div', { class: 'linha-campos' },
+      campo('Custo (R$)', h('input', {
+        type: 'number', name: 'custo', step: '0.01', min: '0',
+        value: produto ? (produto.custo_centavos / 100).toFixed(2) : '0.00',
+      })),
+      campo('Preço de venda (R$)', h('input', {
+        type: 'number', name: 'preco', step: '0.01', min: '0', required: true,
+        value: produto ? (produto.preco_centavos / 100).toFixed(2) : '0.00',
+      }))));
+}
 
-  const container = h('div', { class: 'tabela-container' });
-  raiz.appendChild(container);
+function paraCentavos(valorTexto) {
+  return Math.round(Number(String(valorTexto || '0').replace(',', '.')) * 100);
+}
 
-  async function carregar() {
-    limpar(container);
-    container.appendChild(carregando());
-    try {
-      const produtos = await api.get('/produtos');
-      renderizarTabela(produtos);
-    } catch (erro) {
-      limpar(container);
-      container.appendChild(h('div', { class: 'estado-vazio erro' }, erro.message));
-    }
-  }
+function abrirFormulario(produto, aoSalvar) {
+  const form = formularioProduto(produto);
+  modal({
+    titulo: produto ? `Editar ${produto.nome}` : 'Novo produto',
+    corpo: form,
+    acoes: [{
+      rotulo: produto ? 'Salvar' : 'Cadastrar',
+      estilo: 'sucesso',
+      aoClicar: async (fechar) => {
+        try {
+          const dados = lerFormulario(form);
+          const payload = {
+            nome: dados.nome,
+            sku: dados.sku,
+            descricao: dados.descricao,
+            categoria: dados.categoria,
+            marca: dados.marca,
+            unidade: dados.unidade,
+            custoCentavos: paraCentavos(dados.custo),
+            precoCentavos: paraCentavos(dados.preco),
+          };
+          if (produto) await api.put(`/api/produtos/${produto.id}`, payload);
+          else await api.post('/api/produtos', payload);
+          fechar();
+          toast(produto ? 'Produto atualizado.' : 'Produto cadastrado.', 'ok');
+          aoSalvar();
+        } catch (erro) {
+          toast(erro.message, 'erro');
+        }
+      },
+    }],
+  });
+}
 
-  function renderizarTabela(produtos) {
-    limpar(container);
-    if (produtos.length === 0) {
-      container.appendChild(h('div', { class: 'estado-vazio' }, 'Nenhum produto cadastrado.'));
+export async function montar(ctx) {
+  const raiz = h('div', {});
+  const areaTabela = h('div', { class: 'cartao-corpo sem-espaco' }, carregando());
+
+  const recarregar = async () => {
+    const lista = await api.get('/api/produtos');
+
+    if (!lista.length) {
+      limpar(areaTabela).append(vazio('Nenhum produto cadastrado', 'Cadastre o primeiro produto do catálogo.'));
       return;
     }
 
-    const tbody = h('tbody');
-    produtos.forEach(produto => {
-      const tr = h('tr', { onclick: () => mostrarFormulario(produto), style: 'cursor:pointer' },
-        h('td', {}, produto.sku || '-'),
-        h('td', {}, produto.nome),
-        h('td', {}, produto.categoria || '-'),
-        h('td', {}, moeda(produto.preco_centavos))
-      );
-      tbody.appendChild(tr);
-    });
+    const corpo = h('tbody', {});
+    for (const produto of lista) {
+      corpo.append(h('tr', { class: 'clicavel', onclick: () => abrirFormulario(produto, recarregar) },
+        h('td', {}, produto.sku || h('span', { class: 'silencioso' }, '—')),
+        h('td', {}, h('div', { class: 'forte' }, produto.nome)),
+        h('td', {}, produto.categoria || h('span', { class: 'silencioso' }, '—')),
+        h('td', { class: 'num' }, moeda(produto.preco_centavos))));
+    }
 
-    const tabela = h('table', { class: 'tabela-dados' },
-      h('thead', {},
-        h('tr', {},
-          h('th', {}, 'SKU'),
-          h('th', {}, 'Nome'),
-          h('th', {}, 'Categoria'),
-          h('th', {}, 'Preço de venda')
-        )
-      ),
-      tbody
-    );
-    container.appendChild(tabela);
-  }
+    limpar(areaTabela).append(h('div', { class: 'tabela-envolve' }, h('table', {},
+      h('thead', {}, h('tr', {},
+        h('th', {}, 'SKU'), h('th', {}, 'Nome'), h('th', {}, 'Categoria'), h('th', { class: 'num' }, 'Preço de venda'))),
+      corpo)));
+  };
 
-  function mostrarFormulario(produto = null) {
-    limpar(raiz);
-    contexto.titulo(produto ? 'Editar Produto' : 'Novo Produto');
-    contexto.acoes(
-      h('button', { class: 'botao fantasma', onclick: () => montar(raiz, contexto) }, 'Voltar')
-    );
+  ctx.definirCabecalho({
+    titulo: 'Produtos',
+    subtitulo: 'Catálogo de produtos',
+    acoes: [h('button', { class: 'botao', type: 'button', onclick: () => abrirFormulario(null, recarregar) },
+      icone('mais'), 'Novo produto')],
+  });
 
-    const form = h('form', { class: 'formulario-padrao', onsubmit: async (e) => {
-      e.preventDefault();
-      const dados = {
-        nome: form.nome.value,
-        sku: form.sku.value,
-        descricao: form.descricao.value,
-        categoria: form.categoria.value,
-        marca: form.marca.value,
-        unidade: form.unidade.value,
-        custoCentavos: Number(form.custo.value.replace(/\D/g, '')) || 0,
-        precoCentavos: Number(form.preco.value.replace(/\D/g, '')) || 0
-      };
+  raiz.append(h('div', { class: 'cartao' },
+    h('div', { class: 'cartao-cabeca' }, h('h3', {}, 'Produtos cadastrados')), areaTabela));
 
-      try {
-        const btn = form.querySelector('button[type="submit"]');
-        btn.disabled = true;
-        btn.textContent = 'Salvando...';
-
-        if (produto) {
-          await api.put(`/produtos/${produto.id}`, dados);
-        } else {
-          await api.post('/produtos', dados);
-        }
-        montar(raiz, contexto);
-      } catch (erro) {
-        alert(erro.message);
-        btn.disabled = false;
-        btn.textContent = 'Salvar';
-      }
-    }});
-
-    form.innerHTML = `
-      <div class="linha-campos">
-        <div class="campo">
-          <label>Nome do Produto</label>
-          <input type="text" name="nome" required value="${produto?.nome || ''}">
-        </div>
-        <div class="campo" style="max-width: 200px">
-          <label>SKU</label>
-          <input type="text" name="sku" value="${produto?.sku || ''}">
-        </div>
-      </div>
-      <div class="campo">
-        <label>Descrição</label>
-        <textarea name="descricao" rows="3">${produto?.descricao || ''}</textarea>
-      </div>
-      <div class="linha-campos">
-        <div class="campo">
-          <label>Categoria</label>
-          <input type="text" name="categoria" value="${produto?.categoria || ''}">
-        </div>
-        <div class="campo">
-          <label>Marca</label>
-          <input type="text" name="marca" value="${produto?.marca || ''}">
-        </div>
-        <div class="campo" style="max-width: 150px">
-          <label>Unidade (ex: UN, KG)</label>
-          <input type="text" name="unidade" value="${produto?.unidade || ''}">
-        </div>
-      </div>
-      <div class="linha-campos">
-        <div class="campo">
-          <label>Custo (R$)</label>
-          <input type="text" name="custo" required value="${produto ? (produto.custo_centavos / 100).toFixed(2) : '0.00'}">
-        </div>
-        <div class="campo">
-          <label>Preço de Venda (R$)</label>
-          <input type="text" name="preco" required value="${produto ? (produto.preco_centavos / 100).toFixed(2) : '0.00'}">
-        </div>
-      </div>
-      <div class="acoes-form">
-        <button type="submit" class="botao primario">Salvar</button>
-      </div>
-    `;
-
-    raiz.appendChild(form);
-  }
-
-  carregar();
+  await recarregar();
+  return raiz;
 }

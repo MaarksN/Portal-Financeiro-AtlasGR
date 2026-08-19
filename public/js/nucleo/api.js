@@ -51,6 +51,7 @@ export const api = {
   get: (caminho) => bruto(caminho),
   post: (caminho, corpo) => bruto(caminho, { metodo: 'POST', corpo }),
   patch: (caminho, corpo) => bruto(caminho, { metodo: 'PATCH', corpo }),
+  put: (caminho, corpo) => bruto(caminho, { metodo: 'PUT', corpo }),
   remover: (caminho) => bruto(caminho, { metodo: 'DELETE' }),
   enviarArquivo: (caminho, formData) => bruto(caminho, { metodo: 'POST', formData }),
 };

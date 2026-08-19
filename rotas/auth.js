@@ -66,6 +66,7 @@ router.get('/api/sessao', (req, res) => {
       integracao: config.integracao.configurado,
       ia: config.ia.configurado,
       emissaoBoleto: config.sicredi.configurado,
+      contratosUrl: config.contratos.url,
     },
   });
 });
