@@ -9,3 +9,7 @@ dados/*.db-wal
 /playwright-report/
 /test-results/
 integracao_d4sign/data/
+
+dados/*.db-shm
+dados/*.db-wal
+server.log
