@@ -3,12 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Entrar · AtlasGR Financeiro</title>
+<title>CONTRATO, COBRANÇAS, RECORRÊNCIAS E REEMBOLSO TUDO NUM SÓ LUGAR</title>
 <link rel="icon" href="/imagens/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
+<style>
+  #botao-entrar {
+    box-shadow: 0 4px 15px rgba(255, 86, 24, 0.4);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+  #botao-entrar:hover {
+    box-shadow: 0 6px 20px rgba(255, 86, 24, 0.6) !important;
+    transform: translateY(-1px);
+  }
+  .login-cartao {
+    transition: box-shadow 0.3s ease;
+  }
+  .login-cartao:hover {
+    box-shadow: 0 0 30px rgba(255, 86, 24, 0.3), 0 0 50px rgba(255, 86, 24, 0.15) !important;
+  }
+</style>
 </head>
 <body class="tela-login">
 
@@ -18,14 +34,14 @@
     <span class="logo-texto"><small>AtlasGR Financeiro</small></span>
   </a>
 
-  <form class="login-cartao" id="form-login">
-    <h2>Entrar</h2>
-    <p class="login-sub">Reembolso e cobranças — num lugar só.</p>
+  <form class="login-cartao" id="form-login" style="box-shadow: 0 0 20px rgba(255, 86, 24, 0.2), 0 0 40px rgba(255, 86, 24, 0.1); border: 1px solid rgba(255, 86, 24, 0.3);">
+    <h2 style="color: #FF5618; font-size: 1.5rem; margin-bottom: 0.5rem; text-shadow: 0 0 10px rgba(255, 86, 24, 0.3);">Portal Financeiro AtlasGR</h2>
+    <p class="login-sub" style="font-weight: 500; font-size: 0.85rem; color: var(--texto); margin-bottom: 2rem;">Contrato, cobranças, recorrências e reembolso tudo num só lugar.</p>
 
-    <label class="campo"><span>E-mail</span>
+    <label class="campo"><span style="color: #FF5618; font-weight: 600;">E-mail</span>
       <input type="email" name="email" required autocomplete="username" placeholder="voce@atlasgr.com.br">
     </label>
-    <label class="campo"><span>Senha</span>
+    <label class="campo"><span style="color: #FF5618; font-weight: 600;">Senha</span>
       <input type="password" name="senha" required autocomplete="current-password" placeholder="••••••••">
     </label>
 

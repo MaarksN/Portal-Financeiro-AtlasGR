@@ -21,23 +21,7 @@ function mensagem(texto, tipo = 'critico') {
 }
 
 function mostrarDicaDemo() {
-  const contas = [
-    ['comercial@atlasgr.com.br', 'solicitante'],
-    ['financeiro@atlasgr.com.br', 'cobranças e baixa de pagamento'],
-    ['coordenacao@atlasgr.com.br', 'aprova reembolso'],
-    ['ti@atlasgr.com.br', 'fontes e integrações'],
-  ];
   dicaDemo.replaceChildren();
-  dicaDemo.append(document.createTextNode('Modo demonstração · senha '));
-  const senha = document.createElement('b');
-  senha.textContent = 'atlas123';
-  dicaDemo.append(senha, document.createTextNode(' para todas as contas'), document.createElement('br'));
-
-  for (const [email, papel] of contas) {
-    const forte = document.createElement('b');
-    forte.textContent = email;
-    dicaDemo.append(forte, document.createTextNode(` — ${papel}`), document.createElement('br'));
-  }
 }
 
 async function preparar() {
