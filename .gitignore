@@ -8,3 +8,4 @@ dados/*.db-wal
 *.log
 /playwright-report/
 /test-results/
+integracao_d4sign/data/

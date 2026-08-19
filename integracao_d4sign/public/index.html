@@ -8,17 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script>
-  (function () {
-    try {
-      var salvo = localStorage.getItem("atlas-fin-tema");
-      var tema = salvo || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "escuro" : "claro");
-      document.documentElement.setAttribute("data-tema", tema);
-    } catch (e) {
-      document.documentElement.setAttribute("data-tema", "claro");
-    }
-  })();
-</script>
+<script src="tema.js"></script>
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -54,7 +44,7 @@
     </div>
     <div class="hero-actions">
       <span class="user-chip"><span>👤 <span id="user-nome">…</span></span><button type="button" id="btn-sair">Sair</button></span>
-      <button type="button" class="btn-tema hero-btn" id="btnTema" onclick="alternarTema()" aria-label="Alternar tema" title="Alternar tema">🌙</button>
+      <button type="button" class="btn-tema hero-btn" id="btnTema" aria-label="Alternar tema" title="Alternar tema">🌙</button>
     </div>
   </div>
 </header>

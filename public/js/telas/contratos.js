@@ -1,12 +1,13 @@
-import { sessao } from '../nucleo/api.js';
 import { h, icone } from '../nucleo/ui.js';
 
 // ------------------------------------------------------------------
-// Contratos & Cobrança — módulo à parte (Bitrix24 -> D4Sign -> Bitrix24
-// + rotina mensal com NXFacil), com login e banco próprios. Aqui só
-// explicamos o que ele faz e linkamos pra lá — nenhum dado atravessa
-// a fronteira entre os dois serviços por aqui.
+// Contratos & Cobrança — módulo Bitrix24 -> D4Sign -> Bitrix24 + rotina
+// mensal com NXFacil, embutido neste mesmo servidor em /integracao (ver
+// server.js). Login e banco próprios do módulo — nenhum dado atravessa
+// a fronteira entre os dois logins por aqui.
 // ------------------------------------------------------------------
+
+const URL_MODULO = 'integracao/';
 
 const PASSOS = [
   { titulo: 'Negócio marcado como "Ganho" no Bitrix24', texto: 'O funil já é o mesmo que o portal lê hoje.' },
@@ -16,22 +17,12 @@ const PASSOS = [
 ];
 
 export async function montar(ctx) {
-  const url = sessao()?.integracoes?.contratosUrl;
-
   ctx.definirCabecalho({
     titulo: 'Contratos & Cobrança',
     subtitulo: 'Bitrix24 × D4Sign × NXFacil',
   });
 
   const raiz = h('div', {});
-
-  if (!url) {
-    raiz.append(h('div', { class: 'cartao' }, h('div', { class: 'cartao-corpo' },
-      h('div', { class: 'aviso alerta' }, icone('alerta', 16),
-        h('div', {}, h('b', {}, 'Módulo não configurado. '),
-          'Defina CONTRATOS_URL no .env do portal para linkar o serviço de contratos.')))));
-    return raiz;
-  }
 
   raiz.append(
     h('div', { class: 'cartao' },
@@ -51,7 +42,7 @@ export async function montar(ctx) {
           h('div', { class: 'silencioso', style: 'font-size:12px;margin-top:3px' },
             'Login separado do portal — peça acesso ao time de TI se ainda não tiver uma conta.')),
         h('a', {
-          class: 'botao', href: url, target: '_blank', rel: 'noopener noreferrer',
+          class: 'botao', href: URL_MODULO, target: '_blank', rel: 'noopener',
         }, icone('externo', 15), 'Abrir Contratos & Cobrança'))),
   );
 

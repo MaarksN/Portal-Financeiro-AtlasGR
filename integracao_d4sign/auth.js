@@ -103,7 +103,9 @@ function requireAuthApi(req, res, next) {
 /** Middleware para paginas HTML: redireciona para /login.html se nao autenticado. */
 function requireAuthPage(req, res, next) {
   const user = currentUser(req);
-  if (!user) return res.redirect("/login.html");
+  // req.baseUrl e o prefixo de montagem quando este server e usado como
+  // sub-app (ex.: "/integracao"); fica vazio quando roda como app raiz.
+  if (!user) return res.redirect(`${req.baseUrl}/login.html`);
   req.user = user;
   next();
 }

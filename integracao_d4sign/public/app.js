@@ -18,7 +18,9 @@ function alternarTema() {
   const tema = document.documentElement.getAttribute("data-tema");
   document.addEventListener("DOMContentLoaded", () => {
     const btn = document.getElementById("btnTema");
-    if (btn) btn.textContent = tema === "escuro" ? "☀️" : "🌙";
+    if (!btn) return;
+    btn.textContent = tema === "escuro" ? "☀️" : "🌙";
+    btn.addEventListener("click", alternarTema);
   });
 })();
 
@@ -61,18 +63,18 @@ document.querySelectorAll("[data-goto-tab]").forEach((el) =>
 // ---------------------------------------------------------------------
 async function carregarUsuario() {
   try {
-    const res = await fetch("/api/me");
+    const res = await fetch("api/me");
     const data = await res.json();
-    if (!data.autenticado) return (window.location.href = "/login.html");
+    if (!data.autenticado) return (window.location.href = "login.html");
     document.getElementById("user-nome").textContent = data.usuario;
   } catch {
-    window.location.href = "/login.html";
+    window.location.href = "login.html";
   }
 }
 
 document.getElementById("btn-sair").addEventListener("click", async () => {
-  await fetch("/api/logout", { method: "POST" });
-  window.location.href = "/login.html";
+  await fetch("api/logout", { method: "POST" });
+  window.location.href = "login.html";
 });
 
 // ---------------------------------------------------------------------
@@ -80,7 +82,7 @@ document.getElementById("btn-sair").addEventListener("click", async () => {
 // ---------------------------------------------------------------------
 async function carregarStatus() {
   try {
-    const res = await fetch("/api/status");
+    const res = await fetch("api/status");
     const data = await res.json();
     const grid = document.getElementById("status-grid");
     const item = (label, valor) => `
@@ -94,9 +96,10 @@ async function carregarStatus() {
       item("NXFacil", data.nxfacil.modo === "http" ? "✅ modo http (real)" : "🧪 modo mock") +
       item("Banco de dados", data.banco.tipo.startsWith("postgres") ? "✅ Postgres" : "⚠️ arquivo local");
 
+    const base = new URL(".", window.location.href).href.replace(/\/$/, "");
     document.getElementById("url-bitrix").textContent =
-      `${window.location.origin}/webhooks/bitrix/gerar-contrato?dealId={{ID}}&secret=SEU_SEGREDO`;
-    document.getElementById("url-d4sign").textContent = `${window.location.origin}/webhooks/d4sign`;
+      `${base}/webhooks/bitrix/gerar-contrato?dealId={{ID}}&secret=SEU_SEGREDO`;
+    document.getElementById("url-d4sign").textContent = `${base}/webhooks/d4sign`;
   } catch (err) {
     log(`Falha ao carregar status: ${err.message}`);
   }
@@ -107,7 +110,7 @@ async function carregarStatus() {
 // ---------------------------------------------------------------------
 async function carregarKpis() {
   try {
-    const res = await fetch("/api/kpis");
+    const res = await fetch("api/kpis");
     const { kpis } = await res.json();
     const gridVendas = document.getElementById("kpi-grid-vendas");
     const gridContratos = document.getElementById("kpi-grid-contratos");
@@ -166,7 +169,7 @@ function renderAlertas(alertas, container, limite) {
 
 async function carregarAlertas() {
   try {
-    const res = await fetch("/api/alertas");
+    const res = await fetch("api/alertas");
     const { alertas } = await res.json();
     document.getElementById("contagem-alertas").textContent = alertas.length;
     renderAlertas(alertas, document.getElementById("alertas-preview"), 5);
@@ -204,7 +207,7 @@ function badgeCobranca(cobranca) {
 
 async function carregarCarteira() {
   try {
-    const res = await fetch("/api/carteira");
+    const res = await fetch("api/carteira");
     const { carteira } = await res.json();
     document.getElementById("contagem-carteira").textContent = carteira.length;
     const wrap = document.getElementById("carteira-wrap");
@@ -311,7 +314,7 @@ document.getElementById("btn-gerar-contrato").addEventListener("click", async (e
   btn.disabled = true;
   log(`Disparando geração de contrato para o deal ${dealId}...`);
   try {
-    const res = await fetch("/api/acoes/gerar-contrato", {
+    const res = await fetch("api/acoes/gerar-contrato", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ dealId }),
@@ -331,7 +334,7 @@ document.getElementById("btn-cobranca").addEventListener("click", async (ev) => 
   btn.disabled = true;
   log("Executando rotina mensal de cobrança...");
   try {
-    const res = await fetch("/api/acoes/rodar-cobranca", { method: "POST" });
+    const res = await fetch("api/acoes/rodar-cobranca", { method: "POST" });
     const data = await res.json();
     log(res.ok ? `OK: ${data.summary.total} negócio(s) processado(s) em ${data.summary.referenceMonth}.` : `Erro: ${data.error}`);
     if (res.ok) await atualizarTudo();
