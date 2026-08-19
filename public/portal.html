@@ -20,7 +20,19 @@
         <span class="logo-texto"><small>Financeiro</small></span>
       </a>
     </div>
-    <nav id="navegacao"></nav>
+    <div class="lateral-busca">
+      <label for="busca-navegacao">Buscar módulos</label>
+      <input id="busca-navegacao" type="search" placeholder="Buscar no menu" autocomplete="off">
+    </div>
+    <section class="atalhos-laterais" aria-label="Favoritos">
+      <div class="lateral-grupo compacto">Favoritos</div>
+      <div id="favoritos-navegacao" class="atalhos-lista"></div>
+    </section>
+    <section class="atalhos-laterais" aria-label="Recentes">
+      <div class="lateral-grupo compacto">Recentes</div>
+      <div id="recentes-navegacao" class="atalhos-lista"></div>
+    </section>
+    <nav id="navegacao" aria-label="Menu principal"></nav>
     <div class="lateral-rodape" id="rodape-lateral"></div>
   </aside>
 
