@@ -68,9 +68,6 @@ app.use(express.static(config.caminhos.publico, {
 
 app.use(rotas);
 
-const integracaoApp = require('./integracao_d4sign/server');
-app.use('/integracao', integracaoApp);
-
 // 404 de API responde JSON; qualquer outra rota desconhecida volta pra '/'.
 app.use('/api', (req, res, next) => next(new ErroApp('Rota não encontrada.', { status: 404, codigo: 'nao_encontrado' })));
 app.use((req, res) => res.redirect('/'));

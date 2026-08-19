@@ -90,8 +90,50 @@ const bitrix = {
     vencimento: texto('BITRIX_CAMPO_VENCIMENTO', 'ufCrm_VENCIMENTO'),
     pagamento: texto('BITRIX_CAMPO_PAGAMENTO', 'ufCrm_PAGAMENTO'),
   },
+  // Estágios do funil de Deals clássico (crm.deal), usados pelo módulo
+  // de Contratos & Cobrança — mesmo BITRIX_WEBHOOK acima, endpoint
+  // diferente (crm.deal.* em vez de crm.item.*, que é para a SPA de
+  // cobrança). Ver lib/bitrixDeals.js.
+  estagios: {
+    gatilho: texto('BITRIX_STAGE_TRIGGER'),
+    enviado: texto('BITRIX_STAGE_SENT'),
+    assinado: texto('BITRIX_STAGE_SIGNED'),
+    cancelado: texto('BITRIX_STAGE_CANCELLED'),
+    ganhoParaCobranca: texto('BITRIX_STAGE_WON_FOR_BILLING'),
+  },
+  categoriaContratos: texto('BITRIX_CATEGORY_ID_CONTRATOS') || null,
 };
 bitrix.configurado = Boolean(bitrix.webhook);
+
+// ---------------- D4Sign (assinatura eletronica de contratos) ----------------
+const d4sign = {
+  baseUrl: texto('D4SIGN_BASE_URL', 'https://sandbox.d4sign.com.br'),
+  tokenApi: texto('D4SIGN_TOKEN_API'),
+  cryptKey: texto('D4SIGN_CRYPT_KEY'),
+  hmacSecret: texto('D4SIGN_HMAC_SECRET'),
+  uuidSafe: texto('D4SIGN_UUID_SAFE'),
+  templateId: texto('D4SIGN_TEMPLATE_ID'),
+  uuidFolder: texto('D4SIGN_UUID_FOLDER') || null,
+};
+d4sign.configurado = Boolean(d4sign.tokenApi && d4sign.cryptKey && d4sign.uuidSafe && d4sign.templateId);
+
+// Segredo do webhook que o Bitrix24 chama (Regra de Automação) para
+// disparar a geração de contrato. Rota pública (fora de /api), então
+// não usa sessão — usa este segredo compartilhado, igual ao padrão já
+// usado pelo espelho (SEGREDO_ENTRADA) mas na direção contrária.
+const contratosWebhookSecret = texto('CONTRATOS_WEBHOOK_SECRET');
+
+// ------------------------------ NXFacil (cobranca mensal) ------------------------------
+// A NXFacil nao publica documentacao de API aberta; modo "mock" (padrao)
+// registra a intencao sem chamar nada externo. Troque para "http" com a
+// documentacao real em maos.
+const nxfacil = {
+  mode: texto('NXFACIL_MODE', 'mock'), // "mock" | "http"
+  baseUrl: texto('NXFACIL_BASE_URL') || null,
+  apiToken: texto('NXFACIL_API_TOKEN') || null,
+  boletoPath: texto('NXFACIL_BOLETO_PATH', '/v1/boletos'),
+  notaPath: texto('NXFACIL_NOTA_PATH', '/v1/notas-fiscais'),
+};
 
 // ------------------ Serviço de integração existente ------------------
 const integracao = {
@@ -204,6 +246,9 @@ module.exports = {
     publico: path.join(raiz, 'public'),
   },
   bitrix,
+  d4sign,
+  contratosWebhookSecret,
+  nxfacil,
   integracao,
   connect,
   perfil,

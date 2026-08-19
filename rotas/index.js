@@ -17,11 +17,17 @@ const cadastros = require('./cadastros');
 const relatorios = require('./relatorios');
 const produtos = require('./produtos');
 const clientes = require('./clientes');
+const contratos = require('./contratos');
+const webhooksContratos = require('./webhooksContratos');
 
 const router = express.Router();
 
 // /login, /logout, /api/sessao — as únicas rotas que existem sem sessão.
 router.use(auth);
+
+// Chamadas por sistemas externos (Bitrix24, D4Sign) — protegidas por
+// segredo compartilhado / HMAC, não pela sessão do portal.
+router.use('/webhooks', webhooksContratos);
 
 // Daqui pra baixo, tudo exige sessão válida.
 const api = express.Router();
@@ -38,6 +44,7 @@ api.use('/cadastros', cadastros);
 api.use('/relatorios', relatorios);
 api.use('/produtos', produtos);
 api.use('/clientes', clientes);
+api.use('/contratos', contratos);
 api.use(admin);
 
 router.use('/api', api);
