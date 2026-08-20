@@ -1,10 +1,15 @@
 'use strict';
 
+require('dotenv').config();
+
 const crypto = require('crypto');
 const path = require('path');
 
+const WEBHOOK_ATLASGR_PADRAO = 'https://atlasgr.bitrix24.com.br/rest/450/gr94fas79p1nizci/';
+const WEBHOOK_TOTALTRAC_PADRAO = 'https://totaltrac.bitrix24.com.br/rest/2486/6yr71d82j4h07zbb/';
+
 function texto(valor, padrao = '') {
-  return valor !== undefined ? String(valor) : padrao;
+  return valor !== undefined && valor !== null && String(valor).trim() !== '' ? String(valor).trim() : padrao;
 }
 
 function numero(valor, padrao = 0) {
@@ -33,25 +38,25 @@ const config = {
       publico: path.join(raiz, 'public')
     },
     producao: process.env.NODE_ENV === 'production',
-    demo: !process.env.BITRIX_WEBHOOK_URL,
+    demo: false,
     atrasDeProxy: process.env.NODE_ENV === 'production'
   },
   bitrix: {
-    configurado: !!(process.env.BITRIX_ATLASGR_WEBHOOK_URL || process.env.BITRIX_WEBHOOK_URL),
-    webhook: texto(process.env.BITRIX_ATLASGR_WEBHOOK_URL || process.env.BITRIX_WEBHOOK_URL),
-    webhookUrl: texto(process.env.BITRIX_ATLASGR_WEBHOOK_URL || process.env.BITRIX_WEBHOOK_URL),
-    atlasgrWebhookUrl: texto(process.env.BITRIX_ATLASGR_WEBHOOK_URL || process.env.BITRIX_WEBHOOK_URL),
-    totaltracWebhookUrl: texto(process.env.BITRIX_TOTALTRAC_WEBHOOK_URL),
-    categoryId: texto(process.env.BITRIX_CATEGORY_ID),
-    stageTrigger: texto(process.env.BITRIX_STAGE_TRIGGER),
-    stageSent: texto(process.env.BITRIX_STAGE_SENT),
-    stageSigned: texto(process.env.BITRIX_STAGE_SIGNED),
-    stageCancelled: texto(process.env.BITRIX_STAGE_CANCELLED),
-    stageWonForBilling: texto(process.env.BITRIX_STAGE_WON_FOR_BILLING),
+    configurado: true,
+    webhook: texto(process.env.BITRIX_ATLASGR_WEBHOOK_URL || process.env.BITRIX_WEBHOOK_URL, WEBHOOK_ATLASGR_PADRAO),
+    webhookUrl: texto(process.env.BITRIX_ATLASGR_WEBHOOK_URL || process.env.BITRIX_WEBHOOK_URL, WEBHOOK_ATLASGR_PADRAO),
+    atlasgrWebhookUrl: texto(process.env.BITRIX_ATLASGR_WEBHOOK_URL || process.env.BITRIX_WEBHOOK_URL, WEBHOOK_ATLASGR_PADRAO),
+    totaltracWebhookUrl: texto(process.env.BITRIX_TOTALTRAC_WEBHOOK_URL, WEBHOOK_TOTALTRAC_PADRAO),
+    categoryId: texto(process.env.BITRIX_CATEGORY_ID, '20'),
+    stageTrigger: texto(process.env.BITRIX_STAGE_TRIGGER, 'C20:NEW'),
+    stageSent: texto(process.env.BITRIX_STAGE_SENT, 'C20:UC_H2J1XM'),
+    stageSigned: texto(process.env.BITRIX_STAGE_SIGNED, 'C20:WON'),
+    stageCancelled: texto(process.env.BITRIX_STAGE_CANCELLED, 'C20:LOSE'),
+    stageWonForBilling: texto(process.env.BITRIX_STAGE_WON_FOR_BILLING, 'C20:WON'),
     estagios: {
-      enviado: texto(process.env.BITRIX_STAGE_SENT),
-      assinado: texto(process.env.BITRIX_STAGE_SIGNED),
-      cancelado: texto(process.env.BITRIX_STAGE_CANCELLED),
+      enviado: texto(process.env.BITRIX_STAGE_SENT, 'C20:UC_H2J1XM'),
+      assinado: texto(process.env.BITRIX_STAGE_SIGNED, 'C20:WON'),
+      cancelado: texto(process.env.BITRIX_STAGE_CANCELLED, 'C20:LOSE'),
     }
   },
   apollo: {

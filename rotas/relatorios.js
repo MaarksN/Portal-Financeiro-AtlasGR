@@ -228,13 +228,13 @@ router.get('/dre-anual', rota(async (req, res) => {
     const totalCobrancas = consultar(qCobrancas, ...pCobrancas)[0]?.total || 0;
 
     // Receitas de Lançamentos
-    const qLancReceitas = `SELECT sum(COALESCE(valor_pago_centavos, valor_centavos)) as total FROM fin_lancamentos WHERE tipo IN ('receber', 'receita') AND status = 'pago' AND (data_pagamento LIKE ? OR (data_pagamento IS NULL AND data_vencimento LIKE ?))`;
+    const qLancReceitas = `SELECT sum(COALESCE(NULLIF(valor_pago_centavos, 0), valor_centavos)) as total FROM fin_lancamentos WHERE tipo IN ('receber', 'receita') AND status = 'pago' AND (data_pagamento LIKE ? OR (data_pagamento IS NULL AND data_vencimento LIKE ?))`;
     const totalLancReceitas = consultar(qLancReceitas, `${chaveMes}%`, `${chaveMes}%`)[0]?.total || 0;
     const receitaBruta = totalCobrancas + totalLancReceitas;
 
     // Deduções
     const qDeducoes = `
-      SELECT sum(COALESCE(l.valor_pago_centavos, l.valor_centavos)) as total
+      SELECT sum(COALESCE(NULLIF(l.valor_pago_centavos, 0), l.valor_centavos)) as total
       FROM fin_lancamentos l
       LEFT JOIN fin_categorias c ON l.categoria_id = c.id
       WHERE l.tipo IN ('pagar', 'despesa') AND l.status = 'pago'
@@ -246,7 +246,7 @@ router.get('/dre-anual', rota(async (req, res) => {
 
     // Custos
     const qCustos = `
-      SELECT sum(COALESCE(l.valor_pago_centavos, l.valor_centavos)) as total
+      SELECT sum(COALESCE(NULLIF(l.valor_pago_centavos, 0), l.valor_centavos)) as total
       FROM fin_lancamentos l
       LEFT JOIN fin_categorias c ON l.categoria_id = c.id
       WHERE l.tipo IN ('pagar', 'despesa') AND l.status = 'pago'
@@ -266,7 +266,7 @@ router.get('/dre-anual', rota(async (req, res) => {
     const reembolsos = consultar(qReembolsos, ...pReembolsos)[0]?.total || 0;
 
     const qGerais = `
-      SELECT sum(COALESCE(l.valor_pago_centavos, l.valor_centavos)) as total
+      SELECT sum(COALESCE(NULLIF(l.valor_pago_centavos, 0), l.valor_centavos)) as total
       FROM fin_lancamentos l
       LEFT JOIN fin_categorias c ON l.categoria_id = c.id
       WHERE l.tipo IN ('pagar', 'despesa') AND l.status = 'pago'
@@ -279,7 +279,7 @@ router.get('/dre-anual', rota(async (req, res) => {
 
     // Resultado Financeiro
     const qFin = `
-      SELECT sum(COALESCE(l.valor_pago_centavos, l.valor_centavos)) as total
+      SELECT sum(COALESCE(NULLIF(l.valor_pago_centavos, 0), l.valor_centavos)) as total
       FROM fin_lancamentos l
       LEFT JOIN fin_categorias c ON l.categoria_id = c.id
       WHERE l.tipo IN ('pagar', 'despesa') AND l.status = 'pago'

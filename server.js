@@ -105,7 +105,7 @@ async function ciclo() {
 function agendarSincronizacao() {
   const minutos = config.sincronizacao.intervaloMinutos;
   if (!minutos) {
-    log.info('Sincronização automática desligada', { motivo: config.core.demo ? 'modo demonstração' : 'SINCRONIZACAO_MINUTOS=0' });
+    log.info('Sincronização automática desligada', { motivo: 'SINCRONIZACAO_MINUTOS=0' });
     return;
   }
   ciclo();
@@ -118,12 +118,8 @@ function iniciar() {
   const servidor = app.listen(config.core.porta, () => {
     log.info(`AtlasGR Financeiro no ar em http://localhost:${config.core.porta}`, {
       ambiente: config.core.ambiente,
-      modoDemo: config.core.demo,
       bitrix: config.bitrix.configurado,
     });
-    if (config.core.demo) {
-      log.info('Modo demonstração: dados semeados localmente, nenhuma fonte externa configurada.');
-    }
     agendarSincronizacao();
   });
 

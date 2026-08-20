@@ -214,21 +214,94 @@ input[disabled], select[disabled] { background: var(--tela); color: var(--texto3
 .grade.lateral-direita { grid-template-columns: minmax(0, 1fr) 330px; align-items: start; }
 @media (max-width: 1080px) { .grade.lateral-direita { grid-template-columns: 1fr; } }
 
-/* ======================= Indicadores ======================= */
-.indicadores { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 12px; margin-bottom: 18px; }
+/* ======================= Indicadores & KPIs ======================= */
+.indicadores { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 22px; }
+.indicadores.grandes { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-bottom: 24px; }
+
 .indicador {
   background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio-g);
-  padding: 14px 16px; box-shadow: var(--sombra);
+  padding: 16px 18px; box-shadow: var(--sombra);
+  position: relative; overflow: hidden; transition: transform .15s ease, box-shadow .15s ease;
 }
+.indicador:hover { transform: translateY(-2px); box-shadow: var(--sombra-alta); }
+
+.indicador::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3.5px;
+  background: var(--linha-forte);
+}
+.indicador.ok::before { background: var(--ok); }
+.indicador.alerta::before { background: var(--alerta); }
+.indicador.critico::before { background: var(--critico); }
+.indicador.destaque::before { background: linear-gradient(90deg, var(--laranja), var(--ambar)); }
+
 .indicador .rotulo {
-  font-size: 10.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
-  color: var(--texto3); display: flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--texto3); display: flex; align-items: center; justify-content: space-between;
 }
-.indicador .valor { font-size: 23px; font-weight: 800; letter-spacing: -.03em; margin-top: 6px; font-variant-numeric: tabular-nums; }
-.indicador .nota { font-size: 11.5px; color: var(--texto3); margin-top: 3px; }
+.indicador .rotulo svg { width: 16px; height: 16px; opacity: .75; stroke: currentColor; }
+.indicador .valor {
+  font-size: 26px; font-weight: 800; letter-spacing: -.03em; margin-top: 8px;
+  font-variant-numeric: tabular-nums; color: var(--texto);
+}
+.indicadores.grandes .indicador .valor { font-size: 30px; font-weight: 800; }
+.indicador .nota { font-size: 12px; color: var(--texto3); margin-top: 5px; display: flex; align-items: center; gap: 5px; }
+
 .indicador.alerta .valor { color: var(--alerta); }
 .indicador.critico .valor { color: var(--critico); }
 .indicador.ok .valor { color: var(--ok); }
+.indicador.destaque .valor { color: var(--laranja); }
+
+/* ======================= Banner de Alertas Executivos ======================= */
+.banner-alerta-executivo {
+  background: #FFF8F4; border: 1px solid #FFE0D2; border-left: 5px solid var(--laranja);
+  border-radius: var(--raio-g); padding: 14px 18px; margin-bottom: 22px;
+  display: flex; align-items: center; gap: 14px; box-shadow: var(--sombra);
+}
+.banner-alerta-executivo.critico {
+  background: #FDF2F0; border-color: #F8CBC3; border-left-color: var(--critico);
+}
+.banner-alerta-executivo.alerta {
+  background: #FEF9F0; border-color: #FDE7C4; border-left-color: var(--alerta);
+}
+.banner-alerta-executivo .icone-alerta {
+  width: 36px; height: 36px; border-radius: 50%; background: #FFE8DD; color: var(--laranja);
+  display: grid; place-items: center; flex: 0 0 auto;
+}
+.banner-alerta-executivo.critico .icone-alerta { background: #FDE2DC; color: var(--critico); }
+.banner-alerta-executivo.alerta .icone-alerta { background: #FDF0DB; color: var(--alerta); }
+.banner-alerta-executivo .conteudo-alerta { flex: 1; min-width: 0; }
+.banner-alerta-executivo .titulo-alerta { font-size: 13.5px; font-weight: 700; color: var(--texto); }
+.banner-alerta-executivo .subtitulo-alerta { font-size: 12px; color: var(--texto2); margin-top: 2px; }
+.banner-alerta-executivo .acoes-alerta { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+/* ======================= Cards de Visão Mensal e Diária ======================= */
+.grade-meses {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;
+}
+.card-mes {
+  background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio);
+  padding: 14px; box-shadow: var(--sombra); display: flex; flex-direction: column; gap: 6px;
+  transition: all .15s ease;
+}
+.card-mes:hover { border-color: var(--laranja); transform: translateY(-2px); }
+.card-mes .cabeca-mes { display: flex; justify-content: space-between; align-items: center; }
+.card-mes .nome-mes { font-size: 13px; font-weight: 700; color: var(--texto); }
+.card-mes .valor-mes { font-size: 18px; font-weight: 800; color: var(--texto); font-variant-numeric: tabular-nums; }
+.card-mes .detalhes-mes { font-size: 11.5px; color: var(--texto3); display: flex; justify-content: space-between; margin-top: 4px; }
+
+.grade-dias {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px;
+}
+.card-dia {
+  background: var(--papel); border: 1px solid var(--linha); border-radius: var(--raio);
+  padding: 10px 12px; text-align: center; box-shadow: var(--sombra); transition: all .15s ease;
+}
+.card-dia:hover { border-color: var(--laranja); background: #FFF9F6; }
+.card-dia.hoje { border-color: var(--laranja); background: #FFF4EE; }
+.card-dia .numero-dia { font-size: 20px; font-weight: 800; color: var(--laranja); line-height: 1.1; }
+.card-dia .rotulo-dia { font-size: 10.5px; font-weight: 600; text-transform: uppercase; color: var(--texto3); }
+.card-dia .valor-dia { font-size: 12.5px; font-weight: 700; color: var(--texto); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.card-dia .contagem-dia { font-size: 10.5px; color: var(--texto3); }
 
 /* ======================= Tabela ======================= */
 .tabela-envolve { overflow-x: auto; }

@@ -220,11 +220,44 @@ export function aviso(tipo, conteudo) {
   return h('div', { class: `aviso ${tipo}` }, icone(tipo === 'info' ? 'relogio' : 'alerta', 16), h('div', {}, conteudo));
 }
 
-export function indicador({ rotulo, valor, nota, tom = '' }) {
+export function bannerAlerta({ titulo, subtitulo, tom = 'alerta', iconeNome = 'alerta', acaoRotulo, aoClicar }) {
+  return h('div', { class: `banner-alerta-executivo ${tom}` },
+    h('div', { class: 'icone-alerta' }, icone(iconeNome, 20)),
+    h('div', { class: 'conteudo-alerta' },
+      h('div', { class: 'titulo-alerta' }, titulo),
+      subtitulo ? h('div', { class: 'subtitulo-alerta' }, subtitulo) : null),
+    acaoRotulo ? h('div', { class: 'acoes-alerta' },
+      h('button', {
+        class: `botao ${tom === 'critico' ? 'perigo' : ''} pequeno`,
+        type: 'button',
+        onclick: aoClicar,
+      }, acaoRotulo)) : null);
+}
+
+export function indicador({ rotulo, valor, nota, tom = '', iconeNome = null }) {
   return h('div', { class: `indicador ${tom}` },
-    h('div', { class: 'rotulo' }, rotulo),
+    h('div', { class: 'rotulo' },
+      rotulo,
+      iconeNome ? icone(iconeNome, 15) : null),
     h('div', { class: 'valor' }, valor),
     nota ? h('div', { class: 'nota' }, nota) : null);
+}
+
+export function cardMes({ nomeMes, valorCentavos, quantidade, detalhe, aoClicar }) {
+  return h('div', { class: 'card-mes', style: aoClicar ? 'cursor:pointer' : '', onclick: aoClicar },
+    h('div', { class: 'cabeca-mes' },
+      h('span', { class: 'nome-mes' }, nomeMes),
+      quantidade !== undefined ? etiqueta(`${quantidade} contrato(s)`, 'neutro') : null),
+    h('div', { class: 'valor-mes' }, moeda(valorCentavos)),
+    detalhe ? h('div', { class: 'detalhes-mes' }, h('span', {}, detalhe)) : null);
+}
+
+export function cardDia({ dia, rotulo, valorCentavos, quantidade, hoje = false, aoClicar }) {
+  return h('div', { class: `card-dia ${hoje ? 'hoje' : ''}`, style: aoClicar ? 'cursor:pointer' : '', onclick: aoClicar },
+    h('div', { class: 'numero-dia' }, dia),
+    h('div', { class: 'rotulo-dia' }, rotulo || 'Vencimento'),
+    h('div', { class: 'valor-dia' }, valorCentavos ? moedaCurta(valorCentavos) : '—'),
+    quantidade ? h('div', { class: 'contagem-dia' }, `${quantidade} item(ns)`) : null);
 }
 
 export function campo(rotulo, controle, dica) {

@@ -70,20 +70,23 @@ export async function montar(ctx) {
         config ? etiqueta('Configurado', 'ok') : etiqueta('Não configurado', 'neutro')),
       extra ? h('div', { class: 'nota' }, extra) : null);
 
+    const intg = saude?.integracoes || {};
     const integracoes = h('div', { class: 'indicadores' },
-      situacao('Jira Cloud', saude.integracoes.jira.configurado, `projeto ${saude.integracoes.jira.projeto}`),
-      situacao('Bitrix24 (leitura)', saude.integracoes.bitrix.configurado, 'crm.item.list'),
-      situacao('Serviço de integração', saude.integracoes.integracao.configurado, 'espelho e eventos assinados'),
+      situacao('Bitrix24 CRM', intg.bitrix?.configurado, 'negócios e faturamento'),
+      situacao('D4Sign', intg.d4sign?.configurado, 'assinaturas eletrônicas'),
+      situacao('NXFácil', intg.nxfacil?.configurado, intg.nxfacil?.modo === 'mock' ? 'modo mock' : 'emissão fiscal'),
+      situacao('Sicredi', intg.sicredi?.configurado, 'boletos e cobranças'),
+      situacao('Serviço de integração', intg.integracao?.configurado, 'webhooks e espelho'),
       indicador({
         rotulo: 'Fila do espelho',
-        valor: saude.espelho.pendentes,
-        tom: saude.espelho.falhados ? 'critico' : (saude.espelho.pendentes ? 'alerta' : 'ok'),
-        nota: `${saude.espelho.enviados} enviados · ${saude.espelho.falhados} falharam`,
+        valor: saude?.espelho?.pendentes || 0,
+        tom: saude?.espelho?.falhados ? 'critico' : ((saude?.espelho?.pendentes || 0) ? 'alerta' : 'ok'),
+        nota: `${saude?.espelho?.enviados || 0} enviados · ${saude?.espelho?.falhados || 0} falharam`,
       }));
 
     // ---- fontes de cobrança ----
     const linhasFontes = h('tbody', {});
-    for (const fonte of fontes.fontes) {
+    for (const fonte of (fontes?.fontes || [])) {
       const ultima = fonte.ultimaSincronizacao;
       linhasFontes.append(h('tr', {},
         h('td', {}, h('div', { class: 'forte' }, fonte.rotulo),
@@ -92,37 +95,30 @@ export async function montar(ctx) {
           ? etiqueta('Ativo', 'ok')
           : h('div', {}, etiqueta('Inativo', 'neutro'),
             h('div', { class: 'silencioso', style: 'font-size:11px;margin-top:3px' }, fonte.motivoInativo || ''))),
-        h('td', { class: 'num' }, fonte.faturas),
+        h('td', { class: 'num' }, fonte.faturas || 0),
         h('td', {}, ultima
           ? h('div', {},
             etiqueta(ultima.estado === 'ok' ? 'ok' : ultima.estado, ultima.estado === 'ok' ? 'ok' : 'critico'),
             h('div', { class: 'silencioso', style: 'font-size:11px;margin-top:3px' }, desdeQuando(ultima.terminado_em)))
           : h('span', { class: 'silencioso' }, 'nunca')),
         h('td', { class: 'silencioso', style: 'font-size:11.5px' },
-          ultima?.erro || (ultima ? `${ultima.novos} novas · ${ultima.atualizados} atualizadas` : '—'))));
+          ultima?.erro || (ultima ? `${ultima.novos || 0} novas · ${ultima.atualizados || 0} atualizadas` : '—'))));
     }
 
     // ---- histórico ----
     const linhasHistorico = h('tbody', {});
-    for (const execucao of fontes.historico) {
+    for (const execucao of (fontes?.historico || [])) {
       linhasHistorico.append(h('tr', {},
         h('td', {}, execucao.fonte),
         h('td', {}, etiqueta(execucao.estado, execucao.estado === 'ok' ? 'ok' : (execucao.estado === 'erro' ? 'critico' : 'info'))),
-        h('td', { class: 'num' }, execucao.registros),
-        h('td', { class: 'num' }, execucao.novos),
-        h('td', { class: 'num' }, execucao.atualizados),
+        h('td', { class: 'num' }, execucao.registros || 0),
+        h('td', { class: 'num' }, execucao.novos || 0),
+        h('td', { class: 'num' }, execucao.atualizados || 0),
         h('td', { class: 'silencioso', style: 'font-size:11.5px' }, dataHora(execucao.terminado_em || execucao.iniciado_em)),
         h('td', { class: 'silencioso', style: 'font-size:11.5px;max-width:280px' }, execucao.erro || '—')));
     }
 
     limpar(area).append(
-      saude.modoDemo
-        ? h('div', { class: 'aviso alerta' }, icone('alerta', 16),
-          h('div', {}, h('b', {}, 'Modo demonstração. '),
-            'Nenhuma fonte externa está configurada, então a carteira exibida foi semeada localmente. '
-            + 'Preencha o .env (ou importe um CSV) para trabalhar com dados reais.'))
-        : null,
-
       integracoes,
 
       h('div', { class: 'cartao', style: 'margin-bottom:16px' },

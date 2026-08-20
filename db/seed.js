@@ -386,15 +386,9 @@ function semearRelatorios() {
 
 function semear() {
   emTransacao(() => {
-
     semearEmpresas();
     semearUsuarios();
-
     semearPolitica();
-    if (config.demo) {
-      semearCobrancas();
-      semearRelatorios();
-    }
   })();
 }
 

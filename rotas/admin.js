@@ -32,14 +32,19 @@ router.get('/saude', rota(async (req, res) => {
   const verificar = req.query.verificar === '1';
 
   const integracoes = {
-    bitrix: { configurado: config.bitrix.configurado },
-    integracao: { configurado: config.integracao.configurado },
+    bitrix: { configurado: Boolean(config.bitrix?.configurado) },
+    d4sign: { configurado: Boolean(config.d4sign?.configurado) },
+    nxfacil: { configurado: Boolean(config.nxfacil?.configurado), modo: config.nxfacil?.modo || 'mock' },
+    sicredi: { configurado: Boolean(config.sicredi?.configurado) },
+    ia: { configurado: Boolean(config.ia?.configurado), provider: config.ia?.provider },
+    integracao: { configurado: Boolean(config.integracao?.configurado) },
+    jira: { configurado: false, projeto: 'n/a' },
   };
 
   // A verificação ativa bate na API de verdade — só sob pedido, para
   // o painel não gastar chamada a cada carregamento.
   if (verificar) {
-    if (config.bitrix.configurado) {
+    if (config.bitrix?.configurado) {
       integracoes.bitrix.checagem = await bitrix.verificar().catch((erro) => ({ ok: false, erro: erro.message }));
     }
   }
@@ -49,9 +54,9 @@ router.get('/saude', rota(async (req, res) => {
     ambiente: config.ambiente,
     modoDemo: config.demo,
     integracoes,
-    fontes: conectores.situacao(),
-    espelho: espelho.situacaoDaFila(),
-    sincronizacaoAutomaticaMinutos: config.sincronizacao.intervaloMinutos,
+    fontes: conectores.situacao ? conectores.situacao() : [],
+    espelho: espelho.situacaoDaFila ? espelho.situacaoDaFila() : { pendentes: 0, enviados: 0, falhados: 0 },
+    sincronizacaoAutomaticaMinutos: config.sincronizacao?.intervaloMinutos ?? 15,
   });
 }));
 

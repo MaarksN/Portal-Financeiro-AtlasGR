@@ -8,6 +8,7 @@ import * as cobrancas from './telas/cobrancas.js';
 import * as fontes from './telas/fontes.js';
 import * as empresas from './telas/empresas.js';
 import * as contratos from './telas/contratos.js';
+import * as extracaoBitrix from './telas/extracaoBitrix.js';
 import * as fiscal from './telas/fiscal.js';
 import * as pdv from './telas/pdv.js';
 import * as cadastros from './telas/cadastros.js';
@@ -43,17 +44,17 @@ const TELAS = {
     modulo: cobrancas, rotulo: 'Cobranças', icone: 'cobranca', grupo: 'Gestão',
     quando: (p) => p.financeiro,
   },
-  fontes: {
-    modulo: fontes, rotulo: 'Fontes e integrações', icone: 'fonte', grupo: 'Gestão',
-    quando: (p) => p.financeiro || p.ti || p.admin,
-  },
-  empresas: {
-    modulo: empresas, rotulo: 'Empresas', icone: 'usuario', grupo: 'Administração',
-    quando: (p) => p.admin,
-  },
   contratos: {
     modulo: contratos, rotulo: 'Contratos & Cobrança', icone: 'externo', grupo: 'Gestão',
     quando: (p) => p.comercial || p.financeiro || p.admin,
+  },
+  extracaoBitrix: {
+    modulo: extracaoBitrix, rotulo: 'Extração Bitrix24', icone: 'fonte', grupo: 'Gestão',
+    quando: (p) => p.comercial || p.financeiro || p.admin,
+  },
+  fontes: {
+    modulo: fontes, rotulo: 'Fontes e integrações', icone: 'fonte', grupo: 'Gestão',
+    quando: (p) => p.financeiro || p.ti || p.admin,
   },
   cadastros: {
     modulo: cadastros, rotulo: 'Cadastros', icone: 'usuario', grupo: 'Cadastros',
@@ -277,15 +278,6 @@ function desenharRodape() {
   );
 }
 
-function desenharFaixaDemo() {
-  if (!sessao().modoDemo) return;
-  document.getElementById('faixa-demo').append(
-    h('div', { class: 'faixa-demo' },
-      icone('alerta', 14),
-      h('span', {}, 'Modo demonstração — dados semeados localmente. Configure Bitrix e as fontes de cobrança no .env para usar os sistemas reais.')),
-  );
-}
-
 // Rota no formato #/tela/parametro
 function rotaAtual() {
   const bruto = (window.location.hash || '#/inicio').replace(/^#\/?/, '');
@@ -339,7 +331,6 @@ async function iniciar() {
   });
 
   desenharRodape();
-  desenharFaixaDemo();
   window.addEventListener('hashchange', rotear);
   await rotear();
 }

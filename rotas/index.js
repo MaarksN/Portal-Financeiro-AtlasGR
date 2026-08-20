@@ -18,6 +18,7 @@ const relatorios = require('./relatorios');
 const produtos = require('./produtos');
 const clientes = require('./clientes');
 const contratos = require('./contratos');
+const bitrix = require('./bitrix');
 const webhooksContratos = require('./webhooksContratos');
 
 const router = express.Router();
@@ -45,6 +46,7 @@ api.use('/relatorios', relatorios);
 api.use('/produtos', produtos);
 api.use('/clientes', clientes);
 api.use('/contratos', contratos);
+api.use('/bitrix', bitrix);
 api.use(admin);
 
 router.use('/api', api);
