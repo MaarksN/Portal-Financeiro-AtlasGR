@@ -348,3 +348,4 @@ iniciar().catch((erro) => {
   toast(erro.message, 'erro');
   limpar(raizPagina).append(h('div', { class: 'carregando' }, 'Falha ao iniciar a central.'));
 });
+
