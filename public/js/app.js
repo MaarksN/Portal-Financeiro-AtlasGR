@@ -130,9 +130,6 @@ const TELAS = {
 };
 
 const raizPagina = document.getElementById('pagina');
-const buscaNavegacao = document.getElementById('busca-navegacao');
-const favoritosNavegacao = document.getElementById('favoritos-navegacao');
-const recentesNavegacao = document.getElementById('recentes-navegacao');
 const navegacao = document.getElementById('navegacao');
 const tituloPagina = document.getElementById('titulo-pagina');
 const subtituloPagina = document.getElementById('subtitulo-pagina');
@@ -141,41 +138,6 @@ const acoesPagina = document.getElementById('acoes-pagina');
 // Contadores que aparecem ao lado do item de menu (fila de aprovação,
 // cobranças que vencem hoje). Preenchidos pelas telas.
 const distintivos = {};
-const CHAVE_PREFERENCIAS = 'atlasgr.portal.preferencias.v1';
-const MAX_RECENTES = 6;
-let filtroNavegacao = '';
-let preferencias = carregarPreferencias();
-
-function carregarPreferencias() {
-  try {
-    const salvas = JSON.parse(localStorage.getItem(CHAVE_PREFERENCIAS) || '{}');
-    return {
-      favoritos: Array.isArray(salvas.favoritos) ? salvas.favoritos.filter((chave) => TELAS[chave]) : [],
-      recentes: Array.isArray(salvas.recentes) ? salvas.recentes.filter((chave) => TELAS[chave]) : [],
-    };
-  } catch (_erro) {
-    return { favoritos: [], recentes: [] };
-  }
-}
-
-function salvarPreferencias() {
-  localStorage.setItem(CHAVE_PREFERENCIAS, JSON.stringify(preferencias));
-}
-
-function registrarRecente(chave) {
-  preferencias.recentes = [chave, ...preferencias.recentes.filter((item) => item !== chave)].slice(0, MAX_RECENTES);
-  salvarPreferencias();
-}
-
-function alternarFavorito(chave) {
-  const jaExiste = preferencias.favoritos.includes(chave);
-  preferencias.favoritos = jaExiste
-    ? preferencias.favoritos.filter((item) => item !== chave)
-    : [...preferencias.favoritos, chave];
-  salvarPreferencias();
-  desenharNavegacao();
-  toast(jaExiste ? 'Favorito removido.' : 'Página adicionada aos favoritos.');
-}
 
 function definirCabecalho({ titulo, subtitulo = '', acoes = [] }) {
   tituloPagina.textContent = titulo;
@@ -202,58 +164,25 @@ function telasVisiveis() {
   return Object.entries(TELAS).filter(([, tela]) => !tela.quando || tela.quando(permissoes));
 }
 
-function correspondeFiltro(chave, tela) {
-  const termo = filtroNavegacao.trim().toLocaleLowerCase('pt-BR');
-  if (!termo) return true;
-  return [chave, tela.rotulo, tela.grupo].some((valor) => String(valor).toLocaleLowerCase('pt-BR').includes(termo));
-}
-
-function montarAtalho(chave, atual) {
-  const tela = TELAS[chave];
-  if (!tela) return null;
-  return h('a', { class: `atalho-nav ${chave === atual ? 'on' : ''}`, href: `#/${chave}` }, tela.rotulo);
-}
-
 function desenharNavegacao() {
   const atual = rotaAtual().tela;
   const visiveis = telasVisiveis();
-  const chavesVisiveis = new Set(visiveis.map(([chave]) => chave));
   limpar(navegacao);
-  limpar(favoritosNavegacao);
-  limpar(recentesNavegacao);
-
-  const favoritosVisiveis = preferencias.favoritos.filter((chave) => chavesVisiveis.has(chave));
-  favoritosNavegacao.append(...(favoritosVisiveis.length
-    ? favoritosVisiveis.map((chave) => montarAtalho(chave, atual))
-    : [h('span', { class: 'atalho-vazio' }, 'Use ☆ nos módulos para favoritar.')]));
-
-  const recentesVisiveis = preferencias.recentes.filter((chave) => chavesVisiveis.has(chave) && !favoritosVisiveis.includes(chave));
-  recentesNavegacao.append(...(recentesVisiveis.length
-    ? recentesVisiveis.map((chave) => montarAtalho(chave, atual))
-    : [h('span', { class: 'atalho-vazio' }, 'Suas telas acessadas aparecem aqui.')]));
 
   let grupoAnterior = null;
   let total = 0;
-  for (const [chave, tela] of visiveis.filter(([chave, tela]) => correspondeFiltro(chave, tela))) {
+  for (const [chave, tela] of visiveis) {
     if (tela.grupo !== grupoAnterior) {
       navegacao.append(h('div', { class: 'lateral-grupo' }, tela.grupo));
       grupoAnterior = tela.grupo;
     }
     const distintivo = distintivos[chave];
-    const favorito = preferencias.favoritos.includes(chave);
     navegacao.append(h('a', {
       class: `nav-item ${chave === atual ? 'on' : ''}`,
       href: `#/${chave}`,
     },
     icone(tela.icone),
     h('span', {}, tela.rotulo),
-    h('button', {
-      class: `favorito-nav ${favorito ? 'on' : ''}`,
-      type: 'button',
-      title: favorito ? 'Remover dos favoritos' : 'Adicionar aos favoritos',
-      'aria-label': favorito ? `Remover ${tela.rotulo} dos favoritos` : `Adicionar ${tela.rotulo} aos favoritos`,
-      onclick: (evento) => { evento.preventDefault(); evento.stopPropagation(); alternarFavorito(chave); },
-    }, favorito ? '★' : '☆'),
     distintivo?.valor
       ? h('span', { class: `contagem ${distintivo.urgente ? 'urgente' : ''}` }, String(distintivo.valor))
       : null));
@@ -297,7 +226,6 @@ async function rotear() {
   }
 
   const meuTurno = ++sequencia;
-  registrarRecente(tela);
   desenharNavegacao();
   limpar(raizPagina).append(carregando());
   definirCabecalho({ titulo: TELAS[tela].rotulo });
@@ -324,11 +252,6 @@ async function iniciar() {
     window.location.href = '/login.html';
     return;
   }
-
-  buscaNavegacao.addEventListener('input', (evento) => {
-    filtroNavegacao = evento.target.value;
-    desenharNavegacao();
-  });
 
   desenharRodape();
   window.addEventListener('hashchange', rotear);

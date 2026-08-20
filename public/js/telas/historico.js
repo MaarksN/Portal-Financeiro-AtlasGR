@@ -2,6 +2,8 @@ import { api, comQuery } from '../nucleo/api.js';
 import {
   h, limpar, icone, vazio, carregando, etiqueta, moeda, data,
 } from '../nucleo/ui.js';
+import { botaoSalvar } from '../nucleo/exportar.js';
+import { botaoAnaliseIA } from '../nucleo/analiseIA.js';
 
 // ------------------------------------------------------------------
 // Histórico — operações finalizadas (pagas ou canceladas).
@@ -33,6 +35,20 @@ export async function montar(ctx) {
       todosLancamentos = reset ? lancamentos : todosLancamentos.concat(lancamentos);
 
       if (pagina === 1) {
+        ctx.definirCabecalho({
+          titulo: 'Histórico',
+          subtitulo: 'Operações finalizadas',
+          acoes: [
+            botaoAnaliseIA('Histórico', () => {
+              return `Registros carregados: ${todosLancamentos.length}\nFiltro: ${filtroTipo || 'Todos'}`;
+            }, area),
+            botaoSalvar('historico', () => ({
+              cabecalhos: ['Data', 'Descrição', 'Tipo', 'Conta', 'Categoria', 'Centro Custo', 'Valor', 'Status'],
+              linhas: todosLancamentos.map((l) => [l.atualizado_em || l.data_vencimento, l.descricao, l.tipo, l.conta_nome || '', l.categoria_nome || '', l.centro_custo_nome || '', ((l.valor_pago_centavos || l.valor_centavos) / 100).toFixed(2), l.status]),
+            })),
+          ],
+        });
+
         // Filtros
         area.append(h('div', { style: 'display:flex;gap:6px;margin-bottom:16px' },
           ...['', 'pagar', 'receber'].map((f) => h('button', {

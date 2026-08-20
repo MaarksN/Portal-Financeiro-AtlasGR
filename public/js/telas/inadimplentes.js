@@ -1,4 +1,6 @@
 import { api } from '../nucleo/api.js';
+import { botaoSalvar } from '../nucleo/exportar.js';
+import { botaoAnaliseIA } from '../nucleo/analiseIA.js';
 import {
   h, limpar, icone, vazio, carregando, etiqueta, indicador, moeda, data, hoje,
 } from '../nucleo/ui.js';
@@ -10,8 +12,7 @@ import {
 export async function montar(ctx) {
   ctx.definirCabecalho({
     titulo: 'Inadimplentes',
-    subtitulo: 'Beta',
-    acoes: [etiqueta('Beta', 'info')],
+    subtitulo: 'Contas a receber vencidas',
   });
 
   const area = h('div', {}, carregando());
@@ -27,6 +28,26 @@ export async function montar(ctx) {
         indicador({ rotulo: 'Pessoas/empresas', valor: String(resultado.total_pessoas), tom: 'alerta' })));
 
       const inadimplentes = resultado.inadimplentes || [];
+
+      ctx.definirCabecalho({
+        titulo: 'Inadimplentes',
+        subtitulo: 'Contas a receber vencidas',
+        acoes: [
+          botaoAnaliseIA('Inadimplentes', () => {
+            return `Total inadimplente: R$ ${(resultado.total_centavos/100).toFixed(2)}\nPessoas/empresas: ${resultado.total_pessoas}\nDevedores: ${inadimplentes.map(g => g.pessoa + ': R$ ' + (g.total_centavos/100).toFixed(2) + ' (' + g.quantidade + ' títulos)').join('\n')}`;
+          }, area),
+          botaoSalvar('inadimplentes', () => {
+            const linhas = [];
+            for (const grupo of inadimplentes) {
+              for (const l of grupo.lancamentos) {
+                linhas.push([grupo.pessoa, l.descricao, (l.valor_centavos/100).toFixed(2), l.data_vencimento]);
+              }
+            }
+            return { cabecalhos: ['Pessoa', 'Descrição', 'Valor', 'Vencimento'], linhas };
+          }),
+        ],
+      });
+
       if (!inadimplentes.length) {
         area.append(h('div', { class: 'cartao' }, h('div', { class: 'cartao-corpo' },
           vazio('Nenhum inadimplente', 'Não há contas a receber vencidas.'))));

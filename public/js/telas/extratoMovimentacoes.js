@@ -2,6 +2,8 @@ import { api, comQuery } from '../nucleo/api.js';
 import {
   h, limpar, icone, vazio, carregando, etiqueta, moeda, data, hoje,
 } from '../nucleo/ui.js';
+import { botaoSalvar } from '../nucleo/exportar.js';
+import { botaoAnaliseIA } from '../nucleo/analiseIA.js';
 
 // ------------------------------------------------------------------
 // Extrato de movimentações — visão consolidada de todos os lançamentos.
@@ -30,6 +32,21 @@ export async function montar(ctx) {
         conta_id: filtroContaId || undefined,
       }));
       limpar(area);
+
+      ctx.definirCabecalho({
+        titulo: 'Extrato de movimentações',
+        subtitulo: 'Todas as movimentações financeiras',
+        acoes: [
+          botaoAnaliseIA('Movimentações', () => {
+            const total = lancamentos.reduce((s, l) => s + l.valor_centavos, 0);
+            return `Período: ${filtroDe} a ${filtroAte}\nTotal movimentações: ${lancamentos.length}\nValor total: R$ ${(total / 100).toFixed(2)}`;
+          }, area),
+          botaoSalvar('extrato-movimentacoes', () => ({
+            cabecalhos: ['Data', 'Descrição', 'Conta', 'Categoria', 'Tipo', 'Valor', 'Status'],
+            linhas: lancamentos.map((l) => [l.data_vencimento, l.descricao, l.conta_nome || '', l.categoria_nome || '', l.tipo, (l.valor_centavos / 100).toFixed(2), l.status]),
+          })),
+        ],
+      });
 
       // Filtros
       const inputDe = h('input', { type: 'date', value: filtroDe, onchange: (e) => { filtroDe = e.target.value; } });

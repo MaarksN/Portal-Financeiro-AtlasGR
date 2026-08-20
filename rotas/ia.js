@@ -20,7 +20,7 @@ function permissoesDe(usuario) {
 }
 
 const esquemaPergunta = z.object({
-  pergunta: z.string().trim().min(3, 'Escreva a pergunta com um pouco mais de detalhe.').max(500),
+  pergunta: z.string().trim().min(3, 'Escreva a pergunta com um pouco mais de detalhe.').max(5000),
 });
 
 router.post('/perguntar', validarCorpo(esquemaPergunta), rota(async (req, res) => {

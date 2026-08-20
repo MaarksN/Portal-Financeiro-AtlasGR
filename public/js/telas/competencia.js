@@ -1,7 +1,9 @@
 import { api, comQuery } from '../nucleo/api.js';
 import {
-  h, limpar, icone, vazio, carregando, etiqueta, indicador, moeda, data,
+  h, limpar, icone, vazio, carregando, etiqueta, indicador, moeda, data, mesAnoExtenso,
 } from '../nucleo/ui.js';
+import { botaoSalvar } from '../nucleo/exportar.js';
+import { botaoAnaliseIA } from '../nucleo/analiseIA.js';
 
 // ------------------------------------------------------------------
 // Visão de competência — receitas e despesas agrupadas por mês.
@@ -20,6 +22,17 @@ export async function montar(ctx) {
       const resultado = await api.get(comQuery('/api/financeiro/competencia', { mes: mesSelecionado }));
       limpar(area);
 
+      const lancamentos = resultado.lancamentos || [];
+
+      ctx.definirCabecalho({
+        titulo: 'Visão de competência',
+        subtitulo: 'Regime de competência por mês',
+        acoes: [
+          botaoAnaliseIA('Competência', () => `Mês: ${mesSelecionado}\nReceitas: R$ ${(resultado.receitas_centavos/100).toFixed(2)}\nDespesas: R$ ${(resultado.despesas_centavos/100).toFixed(2)}\nResultado: R$ ${(resultado.resultado_centavos/100).toFixed(2)}\nLançamentos: ${lancamentos.length}`, area),
+          botaoSalvar('competencia', () => ({ cabecalhos: ['Descrição', 'Tipo', 'Valor', 'Vencimento', 'Status'], linhas: lancamentos.map(l => [l.descricao, l.tipo, (l.valor_centavos/100).toFixed(2), l.data_vencimento, l.status]) })),
+        ],
+      });
+
       // Seletor de mês
       const inputMes = h('input', {
         type: 'month', value: mesSelecionado,
@@ -35,7 +48,6 @@ export async function montar(ctx) {
         indicador({ rotulo: 'Despesas', valor: moeda(resultado.despesas_centavos), tom: 'critico' }),
         indicador({ rotulo: 'Resultado', valor: moeda(resultado.resultado_centavos), tom: resultadoTom })));
 
-      const lancamentos = resultado.lancamentos || [];
       if (!lancamentos.length) {
         area.append(h('div', { class: 'cartao' }, h('div', { class: 'cartao-corpo' },
           vazio('Nenhum lançamento', 'Não há lançamentos para este mês de competência.'))));
@@ -54,7 +66,7 @@ export async function montar(ctx) {
       }
 
       area.append(h('div', { class: 'cartao' },
-        h('div', { class: 'cartao-cabeca' }, h('h3', {}, `Lançamentos — ${mesSelecionado}`)),
+        h('div', { class: 'cartao-cabeca' }, h('h3', {}, `Lançamentos — ${mesAnoExtenso(mesSelecionado)}`)),
         h('div', { class: 'cartao-corpo sem-espaco' },
           h('div', { class: 'tabela-envolve' },
             h('table', {},

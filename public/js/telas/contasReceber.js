@@ -3,6 +3,8 @@ import {
   h, limpar, icone, toast, modal, campo, lerFormulario,
   vazio, carregando, etiqueta, indicador, moeda, data,
 } from '../nucleo/ui.js';
+import { botaoSalvar } from '../nucleo/exportar.js';
+import { botaoAnaliseIA } from '../nucleo/analiseIA.js';
 
 // ------------------------------------------------------------------
 // Contas a receber — lançamentos tipo 'receber' com filtros.
@@ -49,15 +51,7 @@ function abrirNovoContaReceber(aoSalvar) {
 }
 
 export async function montar(ctx) {
-  ctx.definirCabecalho({
-    titulo: 'Contas a receber',
-    acoes: [
-      h('button', {
-        class: 'botao', type: 'button',
-        onclick: () => abrirNovoContaReceber(recarregar),
-      }, icone('mais', 14), 'Novo'),
-    ],
-  });
+  ctx.definirCabecalho({ titulo: 'Contas a receber' });
 
   const area = h('div', {}, carregando());
   let filtroAtual = '';
@@ -72,6 +66,15 @@ export async function montar(ctx) {
         indicador({ rotulo: 'Total pendente', valor: moeda(resultado.total_pendente), tom: 'alerta' }),
         indicador({ rotulo: 'Total recebido', valor: moeda(resultado.total_pago), tom: 'ok' }),
         indicador({ rotulo: 'Quantidade', valor: String(resultado.quantidade) })));
+
+      ctx.definirCabecalho({
+        titulo: 'Contas a receber',
+        acoes: [
+          botaoAnaliseIA('Contas a Receber', () => `Total pendente: R$ ${(resultado.total_pendente/100).toFixed(2)}\nTotal recebido: R$ ${(resultado.total_pago/100).toFixed(2)}\nQuantidade: ${resultado.quantidade}\nLançamentos pendentes: ${(resultado.lancamentos||[]).filter(l=>l.status==='pendente').length}`, area),
+          botaoSalvar('contas-receber', () => ({ cabecalhos: ['Descrição', 'Cliente', 'Valor', 'Vencimento', 'Status'], linhas: (resultado.lancamentos||[]).map(l => [l.descricao, l.pessoa||'', (l.valor_centavos/100).toFixed(2), l.data_vencimento, l.status]) })),
+          h('button', { class: 'botao', type: 'button', onclick: () => abrirNovoContaReceber(recarregar) }, icone('mais', 14), 'Novo'),
+        ],
+      });
 
       const filtros = h('div', { style: 'display:flex;gap:6px;margin-bottom:16px' },
         ...['', 'pendente', 'pago'].map((f) => h('button', {

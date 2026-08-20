@@ -1,4 +1,5 @@
 import { api, sessao } from '../nucleo/api.js';
+import { botaoAnaliseIA } from '../nucleo/analiseIA.js';
 import {
   h, limpar, icone, moeda, moedaCurta,
   carregando, etiqueta, indicador, bannerAlerta,
@@ -45,6 +46,28 @@ export async function montar(ctx) {
   ctx.definirCabecalho({
     titulo: `${bomDia()}, ${usuario.nome.split(' ')[0]}`,
     subtitulo: `Painel Executivo Financeiro · ${new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`,
+    acoes: [
+      botaoAnaliseIA('Painel Executivo', () => {
+        const linhas = [
+          `Carteira Ativa / Contratos: R$ ${((contratosKpis?.totalCarteiraCentavos || painel?.indicadores?.abertoCentavos || 0) / 100).toFixed(2)} (${contratosKpis?.totalDeals || 0} negócios)`,
+          `Contratos Assinados: ${contratosKpis?.contratos?.signed || 0} (Conversão: ${(contratosKpis?.taxaAssinatura || 0).toFixed(0)}%)`,
+          `Contratos Aguardando Assinatura: ${contratosKpis?.contratos?.sent || 0}`,
+          `Inadimplência / Vencido: R$ ${((painel?.indicadores?.vencidoCentavos || 0) / 100).toFixed(2)}${painel?.indicadores?.percentualVencido ? ` (${painel.indicadores.percentualVencido}% da carteira)` : ''}`,
+          `Reembolsos em Análise: R$ ${((resumoReembolso?.emAprovacaoCentavos || 0) / 100).toFixed(2)} (${resumoReembolso?.emAprovacao || 0} relatórios)`,
+        ];
+        if (painel?.indicadores) {
+          linhas.push(`Recebido: R$ ${((painel.indicadores.recebidoCentavos || 0) / 100).toFixed(2)}`);
+          if (painel.indicadores.dso) linhas.push(`DSO Médio: ${painel.indicadores.dso} dias`);
+          if (painel.indicadores.juridicoCentavos) linhas.push(`No Jurídico: R$ ${(painel.indicadores.juridicoCentavos / 100).toFixed(2)}`);
+          if (painel.indicadores.promessasQuebradas) linhas.push(`Promessas Quebradas: ${painel.indicadores.promessasQuebradas}`);
+        }
+        if (fila?.length) {
+          const totalFila = fila.reduce((s, r) => s + (r.totalCentavos || 0), 0);
+          linhas.push(`Fila de Aprovação: ${fila.length} relatórios pendentes (R$ ${(totalFila / 100).toFixed(2)})`);
+        }
+        return linhas.join('\n');
+      }, raiz),
+    ],
   });
 
   // -------------------------- 1. Alertas Executivos no Topo --------------------------

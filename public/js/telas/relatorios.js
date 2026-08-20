@@ -1,7 +1,9 @@
 import { api, comQuery } from '../nucleo/api.js';
 import {
-  h, limpar, carregando, icone, moeda, moedaCurta, indicador, etiqueta,
+  h, limpar, carregando, icone, moeda, moedaCurta, indicador, etiqueta, mesAnoExtenso,
 } from '../nucleo/ui.js';
+import { botaoSalvar } from '../nucleo/exportar.js';
+import { botaoAnaliseIA } from '../nucleo/analiseIA.js';
 
 function aba({ id, rotulo, ativa, aoClicar }) {
   return h('button', {
@@ -213,7 +215,7 @@ function renderizarDREMensal(dados, mesSelecionado, aoTrocarMes, aoTrocarModo) {
     barraControles,
     h('div', { class: 'cartao' },
       h('div', { class: 'cartao-cabeca' },
-        h('h3', {}, `Demonstração do Resultado do Exercício — ${mesSelecionado}`),
+        h('h3', {}, `Demonstração do Resultado do Exercício — ${mesAnoExtenso(mesSelecionado)}`),
         h('span', { class: 'texto-suave' }, 'Visão Mensal Detalhada')
       ),
       h('div', { class: 'cartao-corpo sem-espaco' },
@@ -311,6 +313,11 @@ export async function montar(ctx) {
   ctx.definirCabecalho({
     titulo: 'Central de Relatórios',
     subtitulo: 'Demonstrações financeiras consolidadas, DRE anual e mensal',
+    acoes: [
+      botaoAnaliseIA('Relatórios DRE', () => {
+        return `Ano exercício: ${anoSelecionado}\nModo: ${modoVisaoDRE}\nMês selecionado: ${mesSelecionado}`;
+      }, raiz),
+    ],
   });
 
   await desenhar();

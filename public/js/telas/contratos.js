@@ -1,6 +1,6 @@
 import { api } from '../nucleo/api.js';
 import {
-  h, limpar, icone, toast, moeda, moedaCurta, dataHora,
+  h, limpar, icone, toast, moeda, moedaCurta, dataHora, mesAno,
   carregando, etiqueta, indicador, bannerAlerta, aviso, vazio,
   cardMes, cardDia,
 } from '../nucleo/ui.js';
@@ -22,7 +22,7 @@ const BADGE_CONTRATO = { signed: 'ok', sent: 'alerta', cancelled: 'critico' };
 function badgeCobranca(cobranca) {
   if (!cobranca) return etiqueta('sem cobrança', 'neutro');
   const erro = cobranca.boletoStatus === 'error' || cobranca.notaStatus === 'error';
-  return etiqueta(`${cobranca.mesReferencia}: boleto ${cobranca.boletoStatus} / nota ${cobranca.notaStatus}`, erro ? 'critico' : 'ok');
+  return etiqueta(`${mesAno(cobranca.mesReferencia)}: boleto ${cobranca.boletoStatus} / nota ${cobranca.notaStatus}`, erro ? 'critico' : 'ok');
 }
 
 // -------------------------------- 1. Geral --------------------------------
@@ -45,7 +45,7 @@ async function montarGeral(ctx) {
       indicador({ rotulo: 'Aguardando assinatura', valor: kpis.contratos.sent, tom: kpis.contratos.sent ? 'alerta' : 'ok', iconeNome: 'relogio' }),
       indicador({ rotulo: 'Taxa de conversão', valor: `${kpis.taxaAssinatura.toFixed(0)}%` }),
       indicador({
-        rotulo: `Cobranças (${cobr.mesReferencia})`,
+        rotulo: `Cobranças (${mesAno(cobr.mesReferencia)})`,
         valor: `${cobr.ok + cobr.mock}/${cobr.total}`,
         tom: cobr.error ? 'critico' : 'ok',
         nota: cobr.error ? `${cobr.error} com erro` : 'rotina pronta',
@@ -291,7 +291,7 @@ function montarAcoes(ctx) {
     btnCobranca.textContent = 'Executando...';
     try {
       const resumo = await api.post('/api/contratos/rodar-cobranca');
-      toast(`${resumo.total} negócio(s) processado(s) em ${resumo.mesReferencia}.`, 'ok');
+      toast(`${resumo.total} negócio(s) processado(s) em ${mesAno(resumo.mesReferencia)}.`, 'ok');
       ctx.recarregar();
     } catch (erro) {
       toast(erro.message, 'erro');

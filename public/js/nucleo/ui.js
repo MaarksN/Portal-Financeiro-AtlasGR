@@ -63,6 +63,26 @@ export const emDias = (dias) => {
   return d.toISOString().slice(0, 10);
 };
 
+/** Converte 'YYYY-MM' em 'MM/YYYY' (mês primeiro, depois ano). */
+export function mesAno(isoMes) {
+  if (!isoMes || isoMes.length < 7) return '—';
+  const [ano, mes] = isoMes.split('-');
+  return `${mes}/${ano}`;
+}
+
+const NOMES_MESES = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+];
+
+/** Converte 'YYYY-MM' em 'Agosto/2026' (mês por extenso / ano). */
+export function mesAnoExtenso(isoMes) {
+  if (!isoMes || isoMes.length < 7) return '—';
+  const [ano, mes] = isoMes.split('-');
+  const idx = Number(mes) - 1;
+  return idx >= 0 && idx < 12 ? `${NOMES_MESES[idx]}/${ano}` : `${mes}/${ano}`;
+}
+
 export const iniciais = (nome) => String(nome || '?')
   .split(/\s+/).slice(0, 2).map((p) => p[0] || '').join('').toUpperCase();
 

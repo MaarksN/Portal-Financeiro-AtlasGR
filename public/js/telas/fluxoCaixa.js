@@ -1,7 +1,9 @@
 import { api, comQuery } from '../nucleo/api.js';
 import {
-  h, limpar, icone, vazio, carregando, etiqueta, indicador, moeda,
+  h, limpar, icone, vazio, carregando, etiqueta, indicador, moeda, mesAno,
 } from '../nucleo/ui.js';
+import { botaoSalvar } from '../nucleo/exportar.js';
+import { botaoAnaliseIA } from '../nucleo/analiseIA.js';
 
 // ------------------------------------------------------------------
 // Fluxo de caixa — visão anual (12 meses) e projeção mensal
@@ -28,6 +30,24 @@ export async function montar(ctx) {
 
       const fluxo = await api.get(comQuery('/api/financeiro/fluxo-caixa', params));
       limpar(area);
+
+      ctx.definirCabecalho({
+        titulo: 'Fluxo de Caixa',
+        subtitulo: 'Acompanhamento de entradas, saídas, projeção e saldo acumulado',
+        acoes: [
+          botaoAnaliseIA('Fluxo de Caixa', () => {
+            if (!fluxo || !fluxo.length) return null;
+            const totalRecReal = fluxo.reduce((s, f) => s + (f.receitas_realizadas || 0), 0);
+            const totalDespReal = fluxo.reduce((s, f) => s + (f.despesas_realizadas || 0), 0);
+            const saldoFinal = fluxo[fluxo.length - 1]?.saldo_acumulado_realizado || 0;
+            return `Período: ${modoVisao === 'ano' ? anoSelecionado : mesesProjecao + ' meses'}\nEntradas realizadas: R$ ${(totalRecReal/100).toFixed(2)}\nSaídas realizadas: R$ ${(totalDespReal/100).toFixed(2)}\nResultado: R$ ${((totalRecReal-totalDespReal)/100).toFixed(2)}\nSaldo final: R$ ${(saldoFinal/100).toFixed(2)}\nMeses com dados: ${fluxo.length}`;
+          }, area),
+          botaoSalvar('fluxo-caixa', () => ({
+            cabecalhos: ['Mês', 'Rec.Prev.', 'Desp.Prev.', 'Saldo Prev.', 'Rec.Real.', 'Desp.Real.', 'Saldo Real.', 'Saldo Acumulado'],
+            linhas: fluxo.map(f => [mesAno(f.mes), (f.receitas_previstas/100).toFixed(2), (f.despesas_previstas/100).toFixed(2), (f.saldo_previsto/100).toFixed(2), (f.receitas_realizadas/100).toFixed(2), (f.despesas_realizadas/100).toFixed(2), (f.saldo_realizado/100).toFixed(2), ((f.saldo_acumulado_realizado||0)/100).toFixed(2)])
+          })),
+        ],
+      });
 
       // Barra de Filtros & Controles
       const controles = h('div', {
@@ -111,7 +131,7 @@ export async function montar(ctx) {
       const corpo = h('tbody', {});
       for (const f of fluxo) {
         corpo.append(h('tr', {},
-          h('td', { class: 'forte mono' }, f.mes),
+          h('td', { class: 'forte mono' }, mesAno(f.mes)),
           h('td', { class: 'num mono' }, moeda(f.receitas_previstas)),
           h('td', { class: 'num mono' }, moeda(f.despesas_previstas)),
           h('td', { class: 'num mono' },

@@ -1,7 +1,8 @@
 import { api, comQuery, sessao } from '../nucleo/api.js';
+import { botaoAnaliseIA } from '../nucleo/analiseIA.js';
 import {
   h, limpar, icone, toast, modal, campo, selecao, lerFormulario,
-  moeda, moedaCurta, data, dataHora, desdeQuando, hoje, emDias,
+  moeda, moedaCurta, data, dataHora, desdeQuando, hoje, emDias, mesAno,
   vazio, carregando, etiqueta, indicador,
 } from '../nucleo/ui.js';
 
@@ -36,7 +37,7 @@ function blocoItensBoleto(inf) {
   const linhasTabela = inf.itens.map((item) => h('tr', {},
     h('td', {}, item.placa),
     h('td', {}, item.transportador),
-    h('td', {}, item.mesReferencia),
+    h('td', {}, mesAno(item.mesReferencia)),
     h('td', { class: 'num' }, moeda(item.valorCentavos))));
 
   const cabecalho = h('tr', {},
@@ -633,6 +634,12 @@ export async function montar(ctx) {
     titulo: 'Cobranças',
     subtitulo: 'Carteira de recebíveis consolidada — o estágio do funil é controlado aqui',
     acoes: [
+      botaoAnaliseIA('Cobranças', () => {
+        if (!painel) return 'Sem dados de cobrança carregados.';
+        const k = painel.indicadores;
+        const totalFunil = (painel.funil || []).map((c) => `${c.rotulo}: ${c.quantidade} faturas (R$ ${(c.saldoCentavos / 100).toFixed(2)})`).join('\n');
+        return `Carteira em aberto: R$ ${(k.abertoCentavos / 100).toFixed(2)} (${k.faturas} faturas)\nVencido: R$ ${(k.vencidoCentavos / 100).toFixed(2)} (${k.percentualVencido}% da carteira)\nRecebido: R$ ${(k.recebidoCentavos / 100).toFixed(2)}\nNo jurídico: R$ ${(k.juridicoCentavos / 100).toFixed(2)}\nPromessas quebradas: ${k.promessasQuebradas}\n\nFunil de Cobrança:\n${totalFunil}`;
+      }, raiz),
       h('button', {
         class: 'botao secundario', type: 'button',
         onclick: () => abrirImportarBoleto(recarregar),

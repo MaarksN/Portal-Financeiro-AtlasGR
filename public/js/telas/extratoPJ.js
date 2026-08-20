@@ -2,6 +2,8 @@ import { api, comQuery } from '../nucleo/api.js';
 import {
   h, limpar, icone, toast, vazio, carregando, etiqueta, indicador, moeda, data, hoje,
 } from '../nucleo/ui.js';
+import { botaoSalvar } from '../nucleo/exportar.js';
+import { botaoAnaliseIA } from '../nucleo/analiseIA.js';
 
 // ------------------------------------------------------------------
 // Extrato da Conta PJ — movimentações da conta corrente com saldo.
@@ -62,6 +64,26 @@ export async function montar(ctx) {
         indicador({ rotulo: 'Conta', valor: resultado.conta.nome }),
         indicador({ rotulo: 'Instituição', valor: resultado.conta.instituicao || '—' }),
         indicador({ rotulo: 'Saldo atual', valor: moeda(resultado.saldo_atual), tom: resultado.saldo_atual >= 0 ? 'ok' : 'critico' })));
+
+      ctx.definirCabecalho({
+        titulo: 'Extrato Conta PJ',
+        subtitulo: 'Movimentações da conta corrente',
+        acoes: [
+          botaoAnaliseIA('Extrato PJ', () => {
+            return `Conta: ${resultado.conta.nome}\nInstituição: ${resultado.conta.instituicao || 'N/A'}\nSaldo atual: R$ ${(resultado.saldo_atual / 100).toFixed(2)}\nPeríodo: ${filtroDe} a ${filtroAte}\nMovimentações: ${(resultado.lancamentos || []).length}`;
+          }, area),
+          botaoSalvar('extrato-pj', () => ({
+            cabecalhos: ['Data', 'Descrição', 'Entrada', 'Saída', 'Saldo'],
+            linhas: (resultado.lancamentos || []).map((l) => [
+              l.data_pagamento || l.data_vencimento,
+              l.descricao,
+              l.tipo === 'receber' ? (l.valor_centavos / 100).toFixed(2) : '',
+              l.tipo !== 'receber' ? (l.valor_centavos / 100).toFixed(2) : '',
+              (l.saldo_apos_lancamento / 100).toFixed(2),
+            ]),
+          })),
+        ],
+      });
 
       const lancamentos = resultado.lancamentos || [];
       if (!lancamentos.length) {
