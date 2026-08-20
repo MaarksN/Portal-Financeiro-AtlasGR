@@ -1,5 +1,6 @@
 'use strict';
-
+console.log('HELLO FROM SERVER.JS');
+setInterval(() => {}, 60000); // Keep event loop alive!
 require('./lib/observability');
 
 const express = require('express');
@@ -22,7 +23,7 @@ const app = express();
 
 // Atrás de proxy reverso, o rate limit e o cookie secure precisam do
 // IP e do protocolo reais.
-if (config.atrasDeProxy) app.set('trust proxy', 1);
+if (config.core.atrasDeProxy) app.set('trust proxy', 1);
 
 app.disable('x-powered-by');
 app.use(cabecalhos);
@@ -34,7 +35,7 @@ app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'portal-fina
 
 app.use(session({
   name: 'atlas.sid',
-  secret: config.segredoSessao,
+  secret: config.core.segredoSessao,
   store: new LojaDeSessaoSqlite(),
   resave: false,
   saveUninitialized: false,
@@ -42,8 +43,8 @@ app.use(session({
   cookie: {
     httpOnly: true,
     sameSite: 'lax',
-    secure: config.producao,
-    maxAge: config.duracaoSessaoMs,
+    secure: config.core.producao,
+    maxAge: config.core.duracaoSessaoMs,
   },
 }));
 
@@ -61,9 +62,9 @@ app.get('/portal.html', (req, res, next) => {
   return next();
 });
 
-app.use(express.static(config.caminhos.publico, {
+app.use(express.static(config.core.caminhos.publico, {
   etag: true,
-  maxAge: config.producao ? '1h' : 0,
+  maxAge: config.core.producao ? '1h' : 0,
 }));
 
 app.use(rotas);
@@ -95,7 +96,7 @@ async function ciclo() {
 function agendarSincronizacao() {
   const minutos = config.sincronizacao.intervaloMinutos;
   if (!minutos) {
-    log.info('Sincronização automática desligada', { motivo: config.demo ? 'modo demonstração' : 'SINCRONIZACAO_MINUTOS=0' });
+    log.info('Sincronização automática desligada', { motivo: config.core.demo ? 'modo demonstração' : 'SINCRONIZACAO_MINUTOS=0' });
     return;
   }
   ciclo();
@@ -105,14 +106,14 @@ function agendarSincronizacao() {
 }
 
 function iniciar() {
-  const servidor = app.listen(config.porta, () => {
-    log.info(`AtlasGR Financeiro no ar em http://localhost:${config.porta}`, {
-      ambiente: config.ambiente,
-      modoDemo: config.demo,
+  const servidor = app.listen(config.core.porta, () => {
+    log.info(`AtlasGR Financeiro no ar em http://localhost:${config.core.porta}`, {
+      ambiente: config.core.ambiente,
+      modoDemo: config.core.demo,
       bitrix: config.bitrix.configurado,
     });
-    if (config.demo) {
-      log.aviso('Modo demonstração: dados semeados localmente, nenhuma fonte externa configurada.');
+    if (config.core.demo) {
+      log.info('Modo demonstração: dados semeados localmente, nenhuma fonte externa configurada.');
     }
     agendarSincronizacao();
   });
@@ -131,7 +132,14 @@ function iniciar() {
 process.on('unhandledRejection', (motivo) => log.erro('Promessa rejeitada sem tratamento', { motivo: String(motivo) }));
 
 if (require.main === module) {
-  iniciar();
+  try {
+    iniciar();
+  } catch (err) {
+    console.error("ERRO SYNCHRONOUS:", err);
+  }
 }
+
+// Keep event loop alive
+setInterval(() => {}, 60000);
 
 module.exports = app;

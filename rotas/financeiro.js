@@ -157,4 +157,255 @@ router.post('/lancamentos/:id/pagar', (req, res) => {
   res.json({ sucesso: true });
 });
 
+// ==============================
+// NOVAS ROTAS
+// ==============================
+
+router.get('/extrato-pj', (req, res) => {
+  const { conta_id, de, ate } = req.query;
+  
+  let sqlConta = "SELECT * FROM fin_contas WHERE tipo = 'corrente'";
+  const paramsConta = [];
+  if (conta_id) {
+    sqlConta += ' AND id = ?';
+    paramsConta.push(conta_id);
+  }
+  const conta = consultarUm(sqlConta, ...paramsConta);
+  
+  if (!conta) return res.status(404).json({ erro: 'Conta PJ não encontrada' });
+
+  let sql = 'SELECT * FROM fin_lancamentos WHERE conta_id = ?';
+  const params = [conta.id];
+  
+  if (de) {
+    sql += ' AND COALESCE(data_pagamento, data_vencimento) >= ?';
+    params.push(de);
+  }
+  if (ate) {
+    sql += ' AND COALESCE(data_pagamento, data_vencimento) <= ?';
+    params.push(ate);
+  }
+  
+  sql += ' ORDER BY COALESCE(data_pagamento, data_vencimento) ASC, id ASC';
+  
+  const lancamentos = consultar(sql, ...params);
+  let saldo = conta.saldo_inicial_centavos;
+  const extrato = lancamentos.map(l => {
+    const valor = l.valor_pago_centavos || l.valor_centavos;
+    if (l.tipo === 'receita' || l.tipo === 'receber') saldo += valor;
+    else saldo -= valor;
+    return { ...l, saldo_apos_lancamento: saldo };
+  });
+
+  res.json({ conta, saldo_atual: saldo, lancamentos: extrato });
+});
+
+router.get('/outras-contas', (req, res) => {
+  const contas = consultar("SELECT * FROM fin_contas WHERE tipo != 'corrente' ORDER BY nome");
+  res.json(contas);
+});
+
+router.get('/competencia', (req, res) => {
+  const { mes } = req.query;
+  if (!mes) return res.status(400).json({ erro: 'Mês é obrigatório (YYYY-MM)' });
+
+  const todos = consultar('SELECT * FROM fin_lancamentos');
+  const lancamentos = todos.filter(l => {
+    const comp = l.competencia || l.data_vencimento.substring(0, 7);
+    return comp === mes;
+  }).sort((a, b) => a.data_vencimento.localeCompare(b.data_vencimento));
+
+  let receitas = 0;
+  let despesas = 0;
+  lancamentos.forEach(l => {
+    if (l.tipo === 'receber') receitas += l.valor_centavos;
+    if (l.tipo === 'pagar') despesas += l.valor_centavos;
+  });
+
+  res.json({
+    mes,
+    receitas_centavos: receitas,
+    despesas_centavos: despesas,
+    resultado_centavos: receitas - despesas,
+    lancamentos
+  });
+});
+
+router.get('/contas-pagar', (req, res) => {
+  const { status, mes, pessoa } = req.query;
+  let sql = "SELECT * FROM fin_lancamentos WHERE tipo = 'pagar'";
+  const params = [];
+  
+  if (status) { sql += ' AND status = ?'; params.push(status); }
+  if (mes) { sql += ' AND data_vencimento LIKE ?'; params.push(`${mes}-%`); }
+  if (pessoa) { sql += ' AND pessoa LIKE ?'; params.push(`%${pessoa}%`); }
+  
+  sql += ' ORDER BY data_vencimento ASC';
+  const lancamentos = consultar(sql, ...params);
+  
+  let total_pendente = 0;
+  let total_pago = 0;
+  lancamentos.forEach(l => {
+    if (l.status === 'pendente') total_pendente += l.valor_centavos;
+    if (l.status === 'pago') total_pago += (l.valor_pago_centavos || l.valor_centavos);
+  });
+  
+  res.json({
+    quantidade: lancamentos.length,
+    total_pendente,
+    total_pago,
+    lancamentos
+  });
+});
+
+router.get('/dda', (req, res) => {
+  const lancamentos = consultar("SELECT * FROM fin_lancamentos WHERE tipo = 'pagar' AND status = 'pendente' ORDER BY data_vencimento ASC");
+  res.json(lancamentos);
+});
+
+router.get('/contas-receber', (req, res) => {
+  const { status, mes, pessoa } = req.query;
+  let sql = "SELECT * FROM fin_lancamentos WHERE tipo = 'receber'";
+  const params = [];
+  
+  if (status) { sql += ' AND status = ?'; params.push(status); }
+  if (mes) { sql += ' AND data_vencimento LIKE ?'; params.push(`${mes}-%`); }
+  if (pessoa) { sql += ' AND pessoa LIKE ?'; params.push(`%${pessoa}%`); }
+  
+  sql += ' ORDER BY data_vencimento ASC';
+  const lancamentos = consultar(sql, ...params);
+  
+  let total_pendente = 0;
+  let total_pago = 0;
+  lancamentos.forEach(l => {
+    if (l.status === 'pendente') total_pendente += l.valor_centavos;
+    if (l.status === 'pago') total_pago += (l.valor_pago_centavos || l.valor_centavos);
+  });
+  
+  res.json({
+    quantidade: lancamentos.length,
+    total_pendente,
+    total_pago,
+    lancamentos
+  });
+});
+
+router.get('/inadimplentes', (req, res) => {
+  const hoje = new Date().toISOString().split('T')[0];
+  const sql = "SELECT * FROM fin_lancamentos WHERE tipo = 'receber' AND status = 'pendente' AND data_vencimento < ? ORDER BY pessoa, data_vencimento ASC";
+  const lancamentos = consultar(sql, hoje);
+  
+  const map = new Map();
+  let total_centavos_geral = 0;
+  
+  lancamentos.forEach(l => {
+    const nome = l.pessoa || 'Desconhecido';
+    if (!map.has(nome)) {
+      map.set(nome, { pessoa: nome, total_centavos: 0, quantidade: 0, lancamentos: [] });
+    }
+    const group = map.get(nome);
+    group.lancamentos.push(l);
+    group.total_centavos += l.valor_centavos;
+    group.quantidade += 1;
+    total_centavos_geral += l.valor_centavos;
+  });
+  
+  const inadimplentes = Array.from(map.values());
+  res.json({
+    inadimplentes,
+    total_centavos: total_centavos_geral,
+    total_pessoas: inadimplentes.length
+  });
+});
+
+router.get('/extrato-movimentacoes', (req, res) => {
+  const { de, ate, tipo, conta_id } = req.query;
+  let sql = `
+    SELECT l.*, c.nome as conta_nome, cat.nome as categoria_nome 
+    FROM fin_lancamentos l
+    LEFT JOIN fin_contas c ON l.conta_id = c.id
+    LEFT JOIN fin_categorias cat ON l.categoria_id = cat.id
+    WHERE 1=1
+  `;
+  const params = [];
+  
+  if (de) { sql += ' AND l.data_vencimento >= ?'; params.push(de); }
+  if (ate) { sql += ' AND l.data_vencimento <= ?'; params.push(ate); }
+  if (tipo) { sql += ' AND l.tipo = ?'; params.push(tipo); }
+  if (conta_id) { sql += ' AND l.conta_id = ?'; params.push(conta_id); }
+  
+  sql += ' ORDER BY l.data_vencimento DESC, l.id DESC';
+  const lancamentos = consultar(sql, ...params);
+  
+  res.json(lancamentos);
+});
+
+router.get('/fluxo-caixa', (req, res) => {
+  const mesesQtd = parseInt(req.query.meses || '3', 10);
+  
+  const d = new Date();
+  const arr = [];
+  
+  for (let i = 0; i < mesesQtd; i++) {
+    const ano = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    arr.push(`${ano}-${m}`);
+    d.setMonth(d.getMonth() + 1);
+  }
+  
+  const sql = "SELECT * FROM fin_lancamentos WHERE data_vencimento LIKE ? OR data_pagamento LIKE ?";
+  
+  const fluxo = arr.map(mes => {
+    const params = [`${mes}-%`, `${mes}-%`];
+    const lancamentos = consultar(sql, ...params);
+    
+    let rec_prev = 0, desp_prev = 0, rec_real = 0, desp_real = 0;
+    
+    lancamentos.forEach(l => {
+      const isMesVenc = l.data_vencimento && l.data_vencimento.startsWith(mes);
+      const isMesPag = l.data_pagamento && l.data_pagamento.startsWith(mes);
+      
+      if (l.tipo === 'receber') {
+        if (l.status === 'pendente' && isMesVenc) rec_prev += l.valor_centavos;
+        if (l.status === 'pago' && isMesPag) rec_real += (l.valor_pago_centavos || l.valor_centavos);
+      } else if (l.tipo === 'pagar') {
+        if (l.status === 'pendente' && isMesVenc) desp_prev += l.valor_centavos;
+        if (l.status === 'pago' && isMesPag) desp_real += (l.valor_pago_centavos || l.valor_centavos);
+      }
+    });
+    
+    return {
+      mes,
+      receitas_previstas: rec_prev,
+      despesas_previstas: desp_prev,
+      receitas_realizadas: rec_real,
+      despesas_realizadas: desp_real,
+      saldo_previsto: rec_prev - desp_prev,
+      saldo_realizado: rec_real - desp_real
+    };
+  });
+  
+  res.json(fluxo);
+});
+
+router.get('/historico', (req, res) => {
+  const pagina = parseInt(req.query.pagina || '1', 10);
+  const limite = parseInt(req.query.limite || '50', 10);
+  const offset = (pagina - 1) * limite;
+  
+  const sql = `
+    SELECT l.*, c.nome as conta_nome, cat.nome as categoria_nome, cc.nome as centro_custo_nome
+    FROM fin_lancamentos l
+    LEFT JOIN fin_contas c ON l.conta_id = c.id
+    LEFT JOIN fin_categorias cat ON l.categoria_id = cat.id
+    LEFT JOIN fin_centros_custo cc ON l.centro_custo_id = cc.id
+    WHERE l.status != 'pendente'
+    ORDER BY COALESCE(l.atualizado_em, l.data_vencimento) DESC, l.id DESC
+    LIMIT ? OFFSET ?
+  `;
+  const lancamentos = consultar(sql, limite, offset);
+  
+  res.json(lancamentos);
+});
+
 module.exports = router;

@@ -16,7 +16,16 @@ import * as financeiro from './telas/financeiro.js';
 import * as produtos from './telas/produtos.js';
 import * as clientes from './telas/clientes.js';
 import * as ia from './telas/ia.js';
-
+import * as extratoPJ from './telas/extratoPJ.js';
+import * as outrasContas from './telas/outrasContas.js';
+import * as competencia from './telas/competencia.js';
+import * as contasPagar from './telas/contasPagar.js';
+import * as dda from './telas/dda.js';
+import * as contasReceber from './telas/contasReceber.js';
+import * as inadimplentes from './telas/inadimplentes.js';
+import * as extratoMovimentacoes from './telas/extratoMovimentacoes.js';
+import * as fluxoCaixa from './telas/fluxoCaixa.js';
+import * as historico from './telas/historico.js';
 // ------------------------------------------------------------------
 // Casca da central: navegação lateral montada a partir das permissões
 // da sessão e um roteador por hash (#/cobrancas/12). Sem build, sem
@@ -47,15 +56,55 @@ const TELAS = {
     quando: (p) => p.comercial || p.financeiro || p.admin,
   },
   cadastros: {
-    modulo: cadastros, rotulo: 'Cadastros', icone: 'usuario', grupo: 'Gestão',
+    modulo: cadastros, rotulo: 'Cadastros', icone: 'usuario', grupo: 'Cadastros',
     quando: (p) => p.admin || p.financeiro || p.comercial,
   },
   relatorios: {
     modulo: relatorios, rotulo: 'Relatórios', icone: 'filtro', grupo: 'Gestão',
     quando: (p) => p.admin || p.financeiro,
   },
+  extratoPJ: {
+    modulo: extratoPJ, rotulo: 'Extrato Conta PJ', icone: 'cobranca', grupo: 'Financeiro',
+    quando: (p) => p.admin || p.financeiro,
+  },
+  outrasContas: {
+    modulo: outrasContas, rotulo: 'Outras contas', icone: 'reembolso', grupo: 'Financeiro',
+    quando: (p) => p.admin || p.financeiro,
+  },
+  competencia: {
+    modulo: competencia, rotulo: 'Visão de competência', icone: 'filtro', grupo: 'Financeiro',
+    quando: (p) => p.admin || p.financeiro,
+  },
+  contasPagar: {
+    modulo: contasPagar, rotulo: 'Contas a pagar', icone: 'reembolso', grupo: 'Financeiro',
+    quando: (p) => p.admin || p.financeiro,
+  },
+  dda: {
+    modulo: dda, rotulo: 'DDA', icone: 'baixar', grupo: 'Financeiro',
+    quando: (p) => p.admin || p.financeiro,
+  },
+  contasReceber: {
+    modulo: contasReceber, rotulo: 'Contas a receber', icone: 'cobranca', grupo: 'Financeiro',
+    quando: (p) => p.admin || p.financeiro,
+  },
+  inadimplentes: {
+    modulo: inadimplentes, rotulo: 'Inadimplentes', icone: 'alerta', grupo: 'Financeiro',
+    quando: (p) => p.admin || p.financeiro,
+  },
+  extratoMovimentacoes: {
+    modulo: extratoMovimentacoes, rotulo: 'Extrato de movimentações', icone: 'fonte', grupo: 'Financeiro',
+    quando: (p) => p.admin || p.financeiro,
+  },
+  fluxoCaixa: {
+    modulo: fluxoCaixa, rotulo: 'Fluxo de caixa', icone: 'cobranca', grupo: 'Financeiro',
+    quando: (p) => p.admin || p.financeiro,
+  },
+  historico: {
+    modulo: historico, rotulo: 'Histórico', icone: 'relogio', grupo: 'Financeiro',
+    quando: (p) => p.admin || p.financeiro,
+  },
   financeiro: {
-    modulo: financeiro, rotulo: 'Financeiro', icone: 'cobranca', grupo: 'Gestão',
+    modulo: financeiro, rotulo: 'Lançamentos', icone: 'reembolso', grupo: 'Financeiro',
     quando: (p) => p.admin || p.financeiro,
   },
   produtos: {

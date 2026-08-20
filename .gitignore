@@ -1,15 +1,4 @@
 node_modules/
+dados/
 .env
-.env.*
-!.env.example
-dados/.segredo-dev
-dados/*.db-shm
-dados/*.db-wal
 *.log
-/playwright-report/
-/test-results/
-integracao_d4sign/data/
-
-dados/*.db-shm
-dados/*.db-wal
-server.log

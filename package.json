@@ -1,63 +1,39 @@
 {
   "name": "atlas-portal-interno",
-  "version": "0.1.0",
-  "private": true,
-  "description": "AtlasGR Financeiro — portal interno de reembolso, cobranças e cadastros da AtlasGR, integrado ao Bitrix24.",
+  "version": "1.0.0",
+  "description": "Portal Financeiro AtlasGR — plataforma unificada de gestão financeira, contratos e integrações",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "vitest run",
-    "test:e2e": "playwright test",
-    "infra:up": "docker compose -f docker-compose.opensource.yml up -d",
-    "infra:down": "docker compose -f docker-compose.opensource.yml down"
+    "billing:run": "node jobs/cobrancaMensal.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "express-session": "^1.18.0",
+    "helmet": "^7.1.0",
+    "multer": "^1.4.5-lts.1",
+    "pdf-parse": "^1.1.1",
+    "pino": "^9.0.0",
+    "pino-http": "^10.0.0",
+    "validator": "^13.12.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0",
+    "supertest": "^7.0.0"
   },
   "engines": {
     "node": ">=18"
   },
-  "dependencies": {
-    "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/auto-instrumentations-node": "^0.79.0",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.221.0",
-    "@opentelemetry/sdk-node": "^0.221.0",
-    "apexcharts": "^6.7.0",
-    "axios": "^1.19.0",
-    "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^13.0.2",
-    "bullmq": "^6.0.9",
-    "casbin": "^5.51.1",
-    "clamscan": "^2.4.0",
-    "cors": "^2.8.6",
-    "currency.js": "^2.0.4",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "express-rate-limit": "^8.6.1",
-    "express-session": "^1.18.0",
-    "helmet": "^8.3.0",
-    "ioredis": "^6.0.0",
-    "jsonwebtoken": "^9.0.3",
-    "jspdf": "^4.2.1",
-    "jspdf-autotable": "^5.0.8",
-    "minio": "^8.0.7",
-    "morgan": "^1.11.0",
-    "multer": "^2.2.0",
-    "openid-client": "^6.8.4",
-    "pdf-parse": "^2.4.5",
-    "pdfmake": "^0.3.11",
-    "pg": "^8.23.0",
-    "pino": "^10.3.1",
-    "pino-http": "^11.0.0",
-    "validator": "^13.15.35",
-    "zod": "^4.4.3"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.62.1",
-    "supertest": "^7.2.2",
-    "vitest": "^4.1.10"
-  },
   "allowScripts": {
-    "better-sqlite3@13.0.2": true,
-    "core-js@3.50.0": true,
-    "msgpackr-extract@3.0.4": true,
-    "protobufjs@7.6.5": true
+    "better-sqlite3@11.10.0": true
   }
 }
