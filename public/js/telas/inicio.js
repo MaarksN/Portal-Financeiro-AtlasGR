@@ -205,7 +205,7 @@ export async function montar(ctx) {
         quantidade: d.qtd,
         hoje: parseInt(d.dia, 10) === hojeDia,
         aoClicar: () => ctx.irPara('cobrancas'),
-      }))));
+      })))));
 
   // -------------------------- 6. Blocos Laterais (Pendências & Funil) --------------------------
   const meusRelatorios = relatorios.filter((r) => ['rascunho', 'em_aprovacao', 'devolvido'].includes(r.estado));

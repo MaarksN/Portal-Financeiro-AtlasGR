@@ -7,10 +7,12 @@
 // padrão que o h() já filtra. Mas Element.append() nativo não filtra:
 // ele transforma null/undefined em texto literal "null"/"undefined" na
 // tela. Corrigido uma vez aqui em vez de em cada um dos ~70 call sites.
-const appendNativo = Element.prototype.append;
-Element.prototype.append = function anexarFiltrando(...filhos) {
-  return appendNativo.apply(this, filhos.filter((f) => f !== null && f !== undefined && f !== false));
-};
+if (typeof Element !== 'undefined' && Element.prototype?.append) {
+  const appendNativo = Element.prototype.append;
+  Element.prototype.append = function anexarFiltrando(...filhos) {
+    return appendNativo.apply(this, filhos.filter((f) => f !== null && f !== undefined && f !== false));
+  };
+}
 
 // ---------------------------- Formatação ----------------------------
 export const esc = (valor) => String(valor ?? '').replace(
