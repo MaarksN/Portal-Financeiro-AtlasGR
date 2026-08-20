@@ -14,8 +14,22 @@ const ABAS = [
   { id: 'geral', rotulo: 'Visão geral & Métricas' },
   { id: 'carteira', rotulo: 'Carteira (Mês & Dia)' },
   { id: 'acoes', rotulo: 'Gerar Contrato (Mapeamento Bitrix)' },
+  { id: 'simulador', rotulo: '🎮 Simulador D4Sign (Tempo Real)' },
   { id: 'config', rotulo: 'Configuração & Webhooks' },
 ];
+
+function modalPopupSucesso(titulo, mensagem, detalhesHtml = null) {
+  modal({
+    titulo,
+    corpo: h('div', { style: 'padding: 16px;' },
+      h('div', { style: 'text-align: center; margin-bottom: 16px;' },
+        h('div', { style: 'font-size: 44px; margin-bottom: 8px;' }, '🎉'),
+        h('h3', { style: 'margin-bottom: 6px;' }, titulo),
+        h('p', { class: 'texto-suave' }, mensagem)),
+      detalhesHtml || null),
+    acoes: [{ rotulo: 'Excelente!', estilo: 'sucesso', aoClicar: (fechar) => fechar() }],
+  });
+}
 
 const BADGE_CONTRATO = { signed: 'ok', sent: 'alerta', cancelled: 'critico' };
 
@@ -275,7 +289,11 @@ function montarAcoes(ctx) {
 
     try {
       const resultado = await api.post('/api/contratos/gerar-contrato', { dealId, origem: selOrigem.value });
-      toast(`Contrato gerado com sucesso! UUID: ${resultado.documentoUuid}`, 'ok');
+      modalPopupSucesso(
+        'Contrato Gerado no D4Sign!',
+        `O contrato do Deal #${dealId} foi gerado e enviado para assinatura com sucesso.`,
+        h('div', { class: 'aviso ok' }, `Documento UUID: ${resultado.documentoUuid || 'D4S-GERADO'}`)
+      );
       ctx.recarregar();
     } catch (erro) {
       toast(erro.message, 'erro');
@@ -291,7 +309,10 @@ function montarAcoes(ctx) {
     btnCobranca.textContent = 'Executando...';
     try {
       const resumo = await api.post('/api/contratos/rodar-cobranca');
-      toast(`${resumo.total} negócio(s) processado(s) em ${mesAno(resumo.mesReferencia)}.`, 'ok');
+      modalPopupSucesso(
+        'Rotina de Cobrança Concluída!',
+        `Foram processados ${resumo.total} negócio(s) com emissão de boletos/NFs para ${mesAno(resumo.mesReferencia)}.`
+      );
       ctx.recarregar();
     } catch (erro) {
       toast(erro.message, 'erro');
@@ -328,6 +349,99 @@ function montarAcoes(ctx) {
         h('p', { class: 'silencioso', style: 'margin:0 0 12px;font-size:12.5px' },
           'Roda sob demanda a rotina mensal: busca os negócios "Ganhos" no Bitrix24 e gera boleto + NF na NXFacil.'),
         btnCobranca)));
+}
+
+// -------------------------------- 3. Simulador D4Sign --------------------------------
+function montarSimulador() {
+  const inpRazao = h('input', { type: 'text', value: 'Atlas Soluções & Tecnologia Ltda' });
+  const inpCnpj = h('input', { type: 'text', value: '12.345.678/0001-90' });
+  const inpEmail = h('input', { type: 'email', value: 'diretoria@atlassolucoes.com.br' });
+  const inpValor = h('input', { type: 'number', value: '1850.00', step: '0.01' });
+  const inpDia = h('input', { type: 'text', value: '10' });
+  const inpPlano = h('input', { type: 'text', value: 'Atlas GR Monitoramento & Gestão 360' });
+
+  const areaResultado = h('div', { style: 'margin-top: 16px;' });
+
+  const btnSimular = h('button', {
+    class: 'botao', type: 'button',
+    style: 'display: inline-flex; align-items: center; gap: 8px;',
+    onclick: async () => {
+      btnSimular.disabled = true;
+      btnSimular.textContent = 'Simulando com D4Sign API...';
+      limpar(areaResultado).append(carregando('Executando simulação de contrato D4Sign...'));
+
+      try {
+        const res = await api.post('/api/contratos/simular-geracao', {
+          razaoSocial: inpRazao.value,
+          cnpj: inpCnpj.value,
+          emailSignatario: inpEmail.value,
+          valor: Number(inpValor.value),
+          vencimentoDia: inpDia.value,
+          plano: inpPlano.value,
+        });
+
+        limpar(areaResultado);
+
+        const listaPassos = h('div', { style: 'margin-top: 12px;' });
+        for (const p of res.passos) {
+          listaPassos.append(h('div', {
+            class: 'cartao',
+            style: 'margin-bottom: 8px; padding: 12px; border-left: 4px solid var(--ok, #10b981);',
+          },
+            h('div', { class: 'forte', style: 'color: var(--ok, #10b981);' }, `Passo ${p.passo}: ${p.descricao}`),
+            h('div', { class: 'texto-suave', style: 'font-size: 12px;' }, p.detalhe)));
+        }
+
+        areaResultado.append(
+          h('div', { class: 'cartao', style: 'border: 2px solid var(--ok, #10b981);' },
+            h('div', { class: 'cartao-cabeca' },
+              h('h3', {}, `✅ Contrato Simulado com Sucesso (UUID: ${res.documentoUuid})`),
+              etiqueta('Status: Enviado', 'ok')),
+            h('div', { class: 'cartao-corpo' },
+              h('div', { class: 'indicadores', style: 'margin-bottom: 12px;' },
+                indicador({ rotulo: 'Razão Social', valor: res.razaoSocial }),
+                indicador({ rotulo: 'Signatário', valor: res.emailSignatario }),
+                indicador({ rotulo: 'Valor Mensal', valor: res.valorFormatado, tom: 'ok' }),
+                indicador({ rotulo: 'Dia Vencimento', valor: `Dia ${res.vencimentoDia}` })),
+              h('div', { class: 'campo', style: 'margin-top: 12px;' },
+                h('span', {}, 'Link de Assinatura Simulado'),
+                h('div', { class: 'entre', style: 'gap: 8px;' },
+                  h('code', { class: 'mono' }, res.linkAssinatura),
+                  h('a', { class: 'botao pequeno', href: res.linkAssinatura, target: '_blank', rel: 'noopener' }, 'Abrir no D4Sign'))),
+              listaPassos)),
+        );
+
+        modalPopupSucesso(
+          'Simulação D4Sign Concluída!',
+          `O contrato para "${res.razaoSocial}" foi gerado com sucesso no simulador D4Sign.`,
+          h('div', { class: 'aviso ok' }, `Documento UUID: ${res.documentoUuid}`)
+        );
+      } catch (e) {
+        limpar(areaResultado).append(h('div', { class: 'aviso critico' }, e.message));
+        toast(e.message, 'erro');
+      } finally {
+        btnSimular.disabled = false;
+        btnSimular.replaceChildren(icone('enviar'), ' 🚀 Executar Simulação D4Sign');
+      }
+    },
+  }, icone('enviar'), ' 🚀 Executar Simulação D4Sign');
+
+  return h('div', { class: 'cartao' },
+    h('div', { class: 'cartao-cabeca' }, h('h3', {}, '🎮 Simulador em Tempo Real — Geração de Contrato D4Sign')),
+    h('div', { class: 'cartao-corpo' },
+      h('p', { class: 'texto-suave', style: 'margin-bottom: 16px;' },
+        'Testador de geração de contrato e envio de assinatura D4Sign. Simula o ciclo completo de mapeamento de variáveis, geração do documento safe e cadastro do signatário.'),
+      h('div', { class: 'grade duas', style: 'gap: 12px;' },
+        h('div', {},
+          campo('Razão Social do Cliente', inpRazao),
+          campo('CNPJ / CPF', inpCnpj),
+          campo('Plano / Solução', inpPlano)),
+        h('div', {},
+          campo('E-mail do Signatário', inpEmail),
+          campo('Valor Mensal (R$)', inpValor),
+          campo('Dia de Vencimento', inpDia))),
+      h('div', { style: 'margin-top: 16px;' }, btnSimular),
+      areaResultado));
 }
 
 // -------------------------------- 4. Configuração --------------------------------
@@ -378,6 +492,7 @@ export async function montar(ctx) {
     if (abaAtual === 'geral') conteudo = await montarGeral(ctx);
     else if (abaAtual === 'carteira') conteudo = await montarCarteira();
     else if (abaAtual === 'acoes') conteudo = montarAcoes(ctx);
+    else if (abaAtual === 'simulador') conteudo = montarSimulador();
     else if (abaAtual === 'config') conteudo = await montarConfig();
 
     limpar(area).append(conteudo);

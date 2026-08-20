@@ -43,4 +43,40 @@ router.post('/rodar-cobranca', rota(async (req, res) => {
   res.json(resumo);
 }));
 
+router.post('/simular-geracao', rota(async (req, res) => {
+  const {
+    razaoSocial = 'Empresa Teste Ltda',
+    cnpj = '12.345.678/0001-90',
+    emailSignatario = 'diretoria@empresa.com.br',
+    valor = 1500,
+    vencimentoDia = '10',
+    plano = 'Atlas GR Monitoramento & Gestão',
+  } = req.body || {};
+
+  const docUuid = `d4s-sim-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+  const passos = [
+    { passo: 1, descricao: 'Mapeamento de variáveis Bitrix24 → D4Sign', status: 'concluido', detalhe: `Razão Social: ${razaoSocial} | CNPJ: ${cnpj}` },
+    { passo: 2, descricao: 'Geração de documento a partir do modelo', status: 'concluido', detalhe: `Documento UUID: ${docUuid} | Modelo Safe` },
+    { passo: 3, descricao: 'Cadastro de signatário e definição de alçada', status: 'concluido', detalhe: `Signatário: ${emailSignatario} (Papel: Assinar)` },
+    { passo: 4, descricao: 'Envio de notificação e disparo de webhook', status: 'concluido', detalhe: `Link de assinatura gerado (Status: Enviado)` },
+  ];
+
+  res.json({
+    ok: true,
+    simulado: true,
+    documentoUuid: docUuid,
+    status: 'sent',
+    razaoSocial,
+    cnpj,
+    emailSignatario,
+    valorFormatado: `R$ ${Number(valor).toFixed(2)}`,
+    vencimentoDia,
+    plano,
+    linkAssinatura: `https://secure.d4sign.com.br/sign/${docUuid}`,
+    passos,
+    criadoEm: new Date().toISOString(),
+  });
+}));
+
 module.exports = router;
