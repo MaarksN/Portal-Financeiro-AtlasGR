@@ -37,14 +37,41 @@ const config = {
     atrasDeProxy: process.env.NODE_ENV === 'production'
   },
   bitrix: {
-    configurado: !!process.env.BITRIX_WEBHOOK_URL,
-    webhookUrl: texto(process.env.BITRIX_WEBHOOK_URL),
+    configurado: !!(process.env.BITRIX_ATLASGR_WEBHOOK_URL || process.env.BITRIX_WEBHOOK_URL),
+    webhook: texto(process.env.BITRIX_ATLASGR_WEBHOOK_URL || process.env.BITRIX_WEBHOOK_URL),
+    webhookUrl: texto(process.env.BITRIX_ATLASGR_WEBHOOK_URL || process.env.BITRIX_WEBHOOK_URL),
+    atlasgrWebhookUrl: texto(process.env.BITRIX_ATLASGR_WEBHOOK_URL || process.env.BITRIX_WEBHOOK_URL),
+    totaltracWebhookUrl: texto(process.env.BITRIX_TOTALTRAC_WEBHOOK_URL),
     categoryId: texto(process.env.BITRIX_CATEGORY_ID),
     stageTrigger: texto(process.env.BITRIX_STAGE_TRIGGER),
     stageSent: texto(process.env.BITRIX_STAGE_SENT),
     stageSigned: texto(process.env.BITRIX_STAGE_SIGNED),
     stageCancelled: texto(process.env.BITRIX_STAGE_CANCELLED),
-    stageWonForBilling: texto(process.env.BITRIX_STAGE_WON_FOR_BILLING)
+    stageWonForBilling: texto(process.env.BITRIX_STAGE_WON_FOR_BILLING),
+    estagios: {
+      enviado: texto(process.env.BITRIX_STAGE_SENT),
+      assinado: texto(process.env.BITRIX_STAGE_SIGNED),
+      cancelado: texto(process.env.BITRIX_STAGE_CANCELLED),
+    }
+  },
+  apollo: {
+    configurado: !!process.env.APOLLO_API_KEY,
+    apiKey: texto(process.env.APOLLO_API_KEY),
+    baseUrl: 'https://api.apollo.io/v1'
+  },
+  places: {
+    configurado: !!process.env.GOOGLE_PLACES_API_KEY,
+    apiKey: texto(process.env.GOOGLE_PLACES_API_KEY)
+  },
+  hunter: {
+    configurado: !!process.env.HUNTER_API_KEY,
+    apiKey: texto(process.env.HUNTER_API_KEY),
+    baseUrl: 'https://api.hunter.io/v2'
+  },
+  bland: {
+    configurado: !!process.env.BLAND_AI_API_KEY,
+    apiKey: texto(process.env.BLAND_AI_API_KEY),
+    baseUrl: texto(process.env.BLAND_AI_BASE_URL, 'https://api.bland.ai/v1')
   },
   d4sign: {
     configurado: !!process.env.D4SIGN_TOKEN_API,
@@ -73,9 +100,13 @@ const config = {
     intervaloMinutos: numero(process.env.SINCRONIZACAO_MINUTOS, 15)
   },
   ia: {
-    provider: texto(process.env.AI_PROVIDER, 'anthropic'),
-    apiKey: texto(process.env.AI_API_KEY),
-    model: texto(process.env.AI_MODEL, 'claude-sonnet-4-20250514')
+    provider: texto(process.env.AI_PROVIDER, 'groq'),
+    apiKey: texto(process.env.AI_API_KEY || process.env.GROQ_API_KEY || process.env.OPENROUTER_API_KEY),
+    groqApiKey: texto(process.env.GROQ_API_KEY),
+    openrouterApiKey: texto(process.env.OPENROUTER_API_KEY),
+    model: texto(process.env.AI_MODEL, 'llama-3.3-70b-versatile'),
+    modelo: texto(process.env.AI_MODEL, 'llama-3.3-70b-versatile'),
+    configurado: !!(process.env.AI_API_KEY || process.env.GROQ_API_KEY || process.env.OPENROUTER_API_KEY)
   },
   anexos: {
     pasta: path.join(dados, 'anexos'),
@@ -90,7 +121,6 @@ const config = {
 };
 
 // Atalhos no nível raiz para compatibilidade com módulos existentes
-// que usam config.caminhos, config.porta, etc.
 config.ambiente = config.core.ambiente;
 config.porta = config.core.porta;
 config.segredoSessao = config.core.segredoSessao;
@@ -102,6 +132,10 @@ config.atrasDeProxy = config.core.atrasDeProxy;
 
 // Garantindo exportação segura de todas as chaves
 config.bitrix = config.bitrix || {};
+config.apollo = config.apollo || {};
+config.places = config.places || {};
+config.hunter = config.hunter || {};
+config.bland = config.bland || {};
 config.d4sign = config.d4sign || {};
 config.nxfacil = config.nxfacil || {};
 config.sicredi = config.sicredi || {};

@@ -341,50 +341,94 @@ router.get('/extrato-movimentacoes', (req, res) => {
 });
 
 router.get('/fluxo-caixa', (req, res) => {
-  const mesesQtd = parseInt(req.query.meses || '3', 10);
-  
-  const d = new Date();
+  const { ano, meses, conta_id } = req.query;
   const arr = [];
-  
-  for (let i = 0; i < mesesQtd; i++) {
-    const ano = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    arr.push(`${ano}-${m}`);
-    d.setMonth(d.getMonth() + 1);
+
+  if (ano) {
+    const anoInt = parseInt(ano, 10);
+    for (let m = 1; m <= 12; m++) {
+      const mStr = String(m).padStart(2, '0');
+      arr.push(`${anoInt}-${mStr}`);
+    }
+  } else {
+    const mesesQtd = parseInt(meses || '6', 10);
+    const d = new Date();
+    for (let i = 0; i < mesesQtd; i++) {
+      const a = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      arr.push(`${a}-${m}`);
+      d.setMonth(d.getMonth() + 1);
+    }
   }
-  
-  const sql = "SELECT * FROM fin_lancamentos WHERE data_vencimento LIKE ? OR data_pagamento LIKE ?";
-  
-  const fluxo = arr.map(mes => {
+
+  // Obter saldo inicial total das contas ativas
+  let sqlContas = 'SELECT sum(saldo_inicial_centavos) as saldo_total FROM fin_contas';
+  const paramsContas = [];
+  if (conta_id) {
+    sqlContas += ' WHERE id = ?';
+    paramsContas.push(conta_id);
+  }
+  const saldoInicialBase = consultar(sqlContas, ...paramsContas)[0]?.saldo_total || 0;
+
+  let saldoAcumuladoPrev = saldoInicialBase;
+  let saldoAcumuladoReal = saldoInicialBase;
+
+  const sqlLanc = 'SELECT * FROM fin_lancamentos WHERE data_vencimento LIKE ? OR data_pagamento LIKE ?';
+  const sqlCob = 'SELECT * FROM cobrancas WHERE vencimento LIKE ? OR pagamento LIKE ?';
+
+  const fluxo = arr.map((mes, index) => {
     const params = [`${mes}-%`, `${mes}-%`];
-    const lancamentos = consultar(sql, ...params);
-    
+    const lancamentos = consultar(sqlLanc, ...params);
+    const cobrancas = consultar(sqlCob, ...params);
+
     let rec_prev = 0, desp_prev = 0, rec_real = 0, desp_real = 0;
-    
-    lancamentos.forEach(l => {
+
+    lancamentos.forEach((l) => {
+      if (conta_id && l.conta_id && String(l.conta_id) !== String(conta_id)) return;
       const isMesVenc = l.data_vencimento && l.data_vencimento.startsWith(mes);
       const isMesPag = l.data_pagamento && l.data_pagamento.startsWith(mes);
-      
-      if (l.tipo === 'receber') {
+
+      if (l.tipo === 'receber' || l.tipo === 'receita') {
         if (l.status === 'pendente' && isMesVenc) rec_prev += l.valor_centavos;
         if (l.status === 'pago' && isMesPag) rec_real += (l.valor_pago_centavos || l.valor_centavos);
-      } else if (l.tipo === 'pagar') {
+      } else if (l.tipo === 'pagar' || l.tipo === 'despesa') {
         if (l.status === 'pendente' && isMesVenc) desp_prev += l.valor_centavos;
         if (l.status === 'pago' && isMesPag) desp_real += (l.valor_pago_centavos || l.valor_centavos);
       }
     });
-    
+
+    cobrancas.forEach((c) => {
+      const isMesVenc = c.vencimento && c.vencimento.startsWith(mes);
+      const isMesPag = c.pagamento && c.pagamento.startsWith(mes);
+
+      if (c.estagio !== 'perda') {
+        if (c.valor_pago_centavos > 0 && isMesPag) {
+          rec_real += c.valor_pago_centavos;
+        } else if (isMesVenc && (!c.valor_pago_centavos || c.valor_pago_centavos === 0)) {
+          rec_prev += c.valor_centavos;
+        }
+      }
+    });
+
+    const saldo_operacional_previsto = rec_prev - desp_prev;
+    const saldo_operacional_realizado = rec_real - desp_real;
+
+    saldoAcumuladoPrev += saldo_operacional_previsto;
+    saldoAcumuladoReal += saldo_operacional_realizado;
+
     return {
       mes,
       receitas_previstas: rec_prev,
       despesas_previstas: desp_prev,
       receitas_realizadas: rec_real,
       despesas_realizadas: desp_real,
-      saldo_previsto: rec_prev - desp_prev,
-      saldo_realizado: rec_real - desp_real
+      saldo_previsto: saldo_operacional_previsto,
+      saldo_realizado: saldo_operacional_realizado,
+      saldo_acumulado_previsto: saldoAcumuladoPrev,
+      saldo_acumulado_realizado: saldoAcumuladoReal,
     };
   });
-  
+
   res.json(fluxo);
 });
 
