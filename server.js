@@ -1,6 +1,5 @@
 'use strict';
 console.log('HELLO FROM SERVER.JS');
-setInterval(() => {}, 60000); // Keep event loop alive!
 require('./lib/observability');
 
 const express = require('express');
@@ -49,13 +48,7 @@ app.use(session({
   },
 }));
 
-// TODO: REMOVER - Bypass temporario de login
-app.use((req, res, next) => {
-  if (req.session && !req.session.usuario) {
-    req.session.usuario = { email: 'admin@atlasgr.com.br', nome: 'Admin (Bypass)', papeis: ['admin'] };
-  }
-  next();
-});
+
 
 // CSRF só onde há efeito colateral. A landing page continua sem
 // sessão para quem nunca fez login.
@@ -144,8 +137,6 @@ if (require.main === module) {
   }
 }
 
-// Keep event loop alive
-setInterval(() => {}, 60000);
 
 module.exports = app;
 

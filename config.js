@@ -5,8 +5,8 @@ require('dotenv').config();
 const crypto = require('crypto');
 const path = require('path');
 
-const WEBHOOK_ATLASGR_PADRAO = 'https://atlasgr.bitrix24.com.br/rest/450/gr94fas79p1nizci/';
-const WEBHOOK_TOTALTRAC_PADRAO = 'https://totaltrac.bitrix24.com.br/rest/2486/6yr71d82j4h07zbb/';
+const WEBHOOK_ATLASGR_PADRAO = '';
+const WEBHOOK_TOTALTRAC_PADRAO = '';
 
 function texto(valor, padrao = '') {
   return valor !== undefined && valor !== null && String(valor).trim() !== '' ? String(valor).trim() : padrao;
